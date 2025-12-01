@@ -1,6 +1,6 @@
 namespace BasketManagementAPI.Services;
 
-public sealed record BasketTotals(
+public sealed record Totals(
     int Subtotal,
     int Discount,
     int Shipping,

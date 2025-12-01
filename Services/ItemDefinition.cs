@@ -1,6 +1,6 @@
 namespace BasketManagementAPI.Services;
 
-public sealed record BasketItemDefinition(
+public sealed record ItemDefinition(
     string ProductId,
     string Name,
     int UnitPrice,

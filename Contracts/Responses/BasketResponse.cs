@@ -4,12 +4,12 @@ namespace BasketManagementAPI.Contracts.Responses;
 
 public sealed record BasketResponse(
     Guid Id,
-    IEnumerable<BasketItemResponse> Items,
+    IEnumerable<ItemResponse> Items,
     ShippingDetailsResponse? Shipping,
     string? DiscountCode,
     PriceResponse Totals);
 
-public sealed record BasketItemResponse(
+public sealed record ItemResponse(
     string ProductId,
     string Name,
     int UnitPrice,

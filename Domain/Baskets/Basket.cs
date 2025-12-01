@@ -9,7 +9,7 @@ public sealed class Basket
 {
     public Guid Id { get; }
 
-    public List<BasketItem> Items { get; }
+    public List<Item> Items { get; }
 
     public ShippingDetails? ShippingDetails { get; private set; }
 
@@ -18,10 +18,10 @@ public sealed class Basket
     public Basket()
     {
         Id = Guid.NewGuid();
-        Items = new List<BasketItem>();
+        Items = new List<Item>();
     }
 
-    public void AddOrUpdateItem(BasketItem item)
+    public void AddOrUpdateItem(Item item)
     {
         var existing = Items.FirstOrDefault(i => i.Matches(item));
 

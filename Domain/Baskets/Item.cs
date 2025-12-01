@@ -3,7 +3,7 @@ using BasketManagementAPI.Domain.Discounts;
 
 namespace BasketManagementAPI.Domain.Baskets;
 
-public sealed class BasketItem
+public sealed class Item
 {
     public string ProductId { get; }
 
@@ -17,7 +17,7 @@ public sealed class BasketItem
 
     public bool HasItemDiscount => ItemDiscount is not null;
 
-    public BasketItem(string productId, string name, int unitPrice, int quantity, IBasketItemDiscount? itemDiscount)
+    public Item(string productId, string name, int unitPrice, int quantity, IBasketItemDiscount? itemDiscount)
     {
         if (string.IsNullOrWhiteSpace(productId))
         {
@@ -66,7 +66,7 @@ public sealed class BasketItem
         return UnitPrice * Quantity;
     }
 
-    public bool Matches(BasketItem other)
+    public bool Matches(Item other)
     {
         if (other is null)
         {

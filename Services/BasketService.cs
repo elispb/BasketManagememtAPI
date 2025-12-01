@@ -28,7 +28,7 @@ public sealed class BasketService : IBasketService
         return basket;
     }
 
-    public async Task<Basket> AddItemsAsync(Guid basketId, IEnumerable<BasketItemDefinition> items)
+    public async Task<Basket> AddItemsAsync(Guid basketId, IEnumerable<ItemDefinition> items)
     {
         if (items is null)
         {
@@ -40,7 +40,7 @@ public sealed class BasketService : IBasketService
         foreach (var itemDefinition in items)
         {
             var discount = CreateItemDiscount(itemDefinition.ItemDiscount);
-            var item = new BasketItem(
+            var item = new Item(
                 itemDefinition.ProductId,
                 itemDefinition.Name,
                 itemDefinition.UnitPrice,
@@ -76,7 +76,7 @@ public sealed class BasketService : IBasketService
         return basket;
     }
 
-    public async Task<BasketTotals> AddShippingAsync(Guid basketId, string country)
+    public async Task<Totals> AddShippingAsync(Guid basketId, string country)
     {
         var basket = await _repository.GetAsync(basketId);
         var shipping = _shippingPolicy.Resolve(country);
@@ -85,13 +85,13 @@ public sealed class BasketService : IBasketService
         return BuildTotals(basket);
     }
 
-    public async Task<BasketTotals> GetTotalsAsync(Guid basketId)
+    public async Task<Totals> GetTotalsAsync(Guid basketId)
     {
         var basket = await _repository.GetAsync(basketId);
         return BuildTotals(basket);
     }
 
-    public async Task<BasketItem> ApplyItemDiscountAsync(Guid basketId, string productId, ItemDiscountDefinition discount)
+    public async Task<Item> ApplyItemDiscountAsync(Guid basketId, string productId, ItemDiscountDefinition discount)
     {
         var basket = await _repository.GetAsync(basketId);
         var item = basket.Items.FirstOrDefault(i => string.Equals(i.ProductId, productId, StringComparison.OrdinalIgnoreCase));
@@ -113,10 +113,10 @@ public sealed class BasketService : IBasketService
         return item;
     }
 
-    public async Task<BasketWithTotals> GetBasketAsync(Guid basketId)
+    public async Task<BasketSnapshot> GetBasketAsync(Guid basketId)
     {
         var basket = await _repository.GetAsync(basketId);
-        return new BasketWithTotals(basket, BuildTotals(basket));
+        return new BasketSnapshot(basket, BuildTotals(basket));
     }
 
     private static IBasketItemDiscount? CreateItemDiscount(ItemDiscountDefinition? definition)
@@ -141,7 +141,7 @@ public sealed class BasketService : IBasketService
         };
     }
 
-    private static BasketTotals BuildTotals(Basket basket)
+    private static Totals BuildTotals(Basket basket)
     {
         var subtotal = basket.Items.Sum(item => item.Total());
         var eligibleAmount = basket.Items.Where(item => !item.HasItemDiscount).Sum(item => item.Total());
@@ -151,7 +151,7 @@ public sealed class BasketService : IBasketService
         var vatAmount = (int)Math.Round(totalWithoutVat * VatRate, 0, MidpointRounding.AwayFromZero);
         var totalWithVat = totalWithoutVat + vatAmount;
 
-        return new BasketTotals(subtotal, discount, shipping, totalWithoutVat, vatAmount, totalWithVat);
+        return new Totals(subtotal, discount, shipping, totalWithoutVat, vatAmount, totalWithVat);
     }
 }
 

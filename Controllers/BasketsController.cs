@@ -49,23 +49,23 @@ public sealed class BasketsController : ControllerBase
         return Ok(Map(snapshot));
     }
 
-    private static BasketResponse Map(BasketWithTotals basketWithTotals)
+    private static BasketResponse Map(BasketSnapshot basketSnapshot)
     {
         return new BasketResponse(
-            basketWithTotals.Basket.Id,
-            basketWithTotals.Basket.Items.Select(Map).ToList(),
-            basketWithTotals.Basket.ShippingDetails is null
+            basketSnapshot.Basket.Id,
+            basketSnapshot.Basket.Items.Select(Map).ToList(),
+            basketSnapshot.Basket.ShippingDetails is null
                 ? null
                 : new ShippingDetailsResponse(
-                    basketWithTotals.Basket.ShippingDetails.Country,
-                    basketWithTotals.Basket.ShippingDetails.Cost),
-            basketWithTotals.Basket.BasketDiscount?.Code,
-            MapPrice(basketWithTotals.Totals));
+                    basketSnapshot.Basket.ShippingDetails.Country,
+                    basketSnapshot.Basket.ShippingDetails.Cost),
+            basketSnapshot.Basket.BasketDiscount?.Code,
+            MapPrice(basketSnapshot.Totals));
     }
 
-    private static BasketItemResponse Map(BasketItem item)
+    private static ItemResponse Map(Item item)
     {
-        return new BasketItemResponse(
+        return new ItemResponse(
             item.ProductId,
             item.Name,
             item.UnitPrice,
@@ -75,7 +75,7 @@ public sealed class BasketsController : ControllerBase
             item.ItemDiscount?.Description);
     }
 
-    private static PriceResponse MapPrice(BasketTotals totals)
+    private static PriceResponse MapPrice(Totals totals)
     {
         return new PriceResponse(
             totals.Subtotal,

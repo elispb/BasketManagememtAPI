@@ -10,11 +10,11 @@ namespace BasketManagementAPI.Controllers;
 
 [ApiController]
 [Route("api/baskets/{basketId:guid}/items")]
-public sealed class BasketItemsController : ControllerBase
+public sealed class ItemsController : ControllerBase
 {
     private readonly IBasketService _basketService;
 
-    public BasketItemsController(IBasketService basketService)
+    public ItemsController(IBasketService basketService)
     {
         _basketService = basketService;
     }
@@ -79,9 +79,9 @@ public sealed class BasketItemsController : ControllerBase
         return NoContent();
     }
 
-    private static BasketItemDefinition Map(AddItemRequest request)
+    private static ItemDefinition Map(AddItemRequest request)
     {
-        return new BasketItemDefinition(
+        return new ItemDefinition(
             request.ProductId,
             request.Name,
             request.UnitPrice,
@@ -91,9 +91,9 @@ public sealed class BasketItemsController : ControllerBase
                 : new ItemDiscountDefinition(request.ItemDiscount.Type, request.ItemDiscount.Amount));
     }
 
-    private static BasketItemResponse Map(BasketItem item)
+    private static ItemResponse Map(Item item)
     {
-        return new BasketItemResponse(
+        return new ItemResponse(
             item.ProductId,
             item.Name,
             item.UnitPrice,
@@ -103,7 +103,7 @@ public sealed class BasketItemsController : ControllerBase
             item.ItemDiscount?.Description);
     }
 
-    private static ItemPriceResponse MapPrice(BasketItem item)
+    private static ItemPriceResponse MapPrice(Item item)
     {
         var lineTotal = item.Total();
         var vatAmount = (int)Math.Round(lineTotal * 0.20m, 0, MidpointRounding.AwayFromZero);
