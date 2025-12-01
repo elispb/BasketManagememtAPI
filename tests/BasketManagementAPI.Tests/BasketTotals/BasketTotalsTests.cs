@@ -6,7 +6,6 @@ using BasketManagementAPI.Services;
 using BasketManagementAPI.Shipping;
 using FluentAssertions;
 using Moq;
-using Xunit;
 
 namespace BasketManagementAPI.Tests.BasketTotals;
 
@@ -56,15 +55,35 @@ public class BasketTotalsTests
         var basket = new Basket();
         basket.AddOrUpdateItem(new Item("E1", "Expensive item", 100, 1, null));
         basket.ApplyDiscount(new PercentageBasketDiscount("FREE", 100));
+        basket.SetShipping(new ShippingDetails("UK", 20));
+
+        var service = CreateServiceWithBasket(basket);
+
+        var totals = await service.GetTotalsAsync(basket.Id);
+
+        totals.TotalWithoutVat.Should().Be(20);
+        totals.VatAmount.Should().Be(0);
+        totals.TotalWithVat.Should().Be(20);
+    }
+
+    [Fact]
+    public async Task GetTotalsAsync_HandlesVeryLargeAmounts()
+    {
+        var basket = new Basket();
+        basket.AddOrUpdateItem(new Item("L1", "Large item #1", 1_000_000_000, 1, null));
+        basket.AddOrUpdateItem(new Item("L2", "Large item #2", 1_000_000_000, 1, null));
+        basket.ApplyDiscount(new PercentageBasketDiscount("BULK", 10));
         basket.SetShipping(new ShippingDetails("UK", 0));
 
         var service = CreateServiceWithBasket(basket);
 
         var totals = await service.GetTotalsAsync(basket.Id);
 
-        totals.TotalWithoutVat.Should().Be(0);
-        totals.VatAmount.Should().Be(0);
-        totals.TotalWithVat.Should().Be(0);
+        totals.Subtotal.Should().Be(2_000_000_000);
+        totals.Discount.Should().Be(200_000_000);
+        totals.TotalWithoutVat.Should().Be(1_800_000_000);
+        totals.VatAmount.Should().Be(360_000_000);
+        totals.TotalWithVat.Should().Be(2_160_000_000);
     }
 
     private BasketService CreateServiceWithBasket(Basket basket)
