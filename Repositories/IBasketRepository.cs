@@ -1,6 +1,6 @@
-using BasketManagementAPI.Domain.Baskets;
+using BasketManagememtAPI.Domain.Baskets;
 
-namespace BasketManagementAPI.Repositories;
+namespace BasketManagememtAPI.Repositories;
 
 public interface IBasketRepository
 {

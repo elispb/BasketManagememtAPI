@@ -1,6 +1,6 @@
 using System;
 
-namespace BasketManagementAPI.Domain.Discounts;
+namespace BasketManagememtAPI.Domain.Discounts;
 
 public sealed class PercentageBasketDiscount : IBasketDiscount
 {

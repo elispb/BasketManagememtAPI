@@ -1,12 +1,12 @@
 using System;
 using System.Linq;
-using BasketManagementAPI.Contracts.Requests;
-using BasketManagementAPI.Contracts.Responses;
-using BasketManagementAPI.Domain.Baskets;
-using BasketManagementAPI.Services;
+using BasketManagememtAPI.Contracts.Requests;
+using BasketManagememtAPI.Contracts.Responses;
+using BasketManagememtAPI.Domain.Baskets;
+using BasketManagememtAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BasketManagementAPI.Controllers;
+namespace BasketManagememtAPI.Controllers;
 
 [ApiController]
 [Route("api/baskets/{basketId:guid}/items")]

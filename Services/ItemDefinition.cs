@@ -1,4 +1,4 @@
-namespace BasketManagementAPI.Services;
+namespace BasketManagememtAPI.Services;
 
 public sealed record ItemDefinition(
     string ProductId,

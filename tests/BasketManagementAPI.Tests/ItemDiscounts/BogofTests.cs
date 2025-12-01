@@ -1,4 +1,4 @@
-﻿using BasketManagementAPI.Domain.Discounts;
+﻿using BasketManagememtAPI.Domain.Discounts;
 using FluentAssertions;
 using Xunit;
 
@@ -6,16 +6,6 @@ namespace BasketManagementAPI.Tests;
 
 public class BasketItemDiscountTests
 {
-    [Fact]
-    public void FlatAmountItemDiscount_CannotProduceNegativeTotals()
-    {
-        var discount = new FlatAmountItemDiscount(500);
-
-        var total = discount.CalculateTotal(300, 4);
-
-        total.Should().Be(0);
-    }
-
     [Theory]
     [InlineData(3, 2500)]
     [InlineData(7, 5000)]

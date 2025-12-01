@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using BasketManagementAPI.Domain.Baskets;
+using BasketManagememtAPI.Domain.Baskets;
+using BasketManagememtAPI.Domain.Discounts;
+using BasketManagememtAPI.Repositories;
+using BasketManagememtAPI.Shipping;
 using BasketManagementAPI.Domain.Discounts;
-using BasketManagementAPI.Repositories;
-using BasketManagementAPI.Shipping;
 
-namespace BasketManagementAPI.Services;
+namespace BasketManagememtAPI.Services;
 
 public sealed class BasketService : IBasketService
 {

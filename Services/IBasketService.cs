@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using BasketManagementAPI.Domain.Baskets;
+using BasketManagememtAPI.Domain.Baskets;
 
-namespace BasketManagementAPI.Services;
+namespace BasketManagememtAPI.Services;
 
 public interface IBasketService
 {

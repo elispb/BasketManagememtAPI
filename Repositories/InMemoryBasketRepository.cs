@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
-using BasketManagementAPI.Domain.Baskets;
+using BasketManagememtAPI.Domain.Baskets;
 
-namespace BasketManagementAPI.Repositories;
+namespace BasketManagememtAPI.Repositories;
 
 public sealed class InMemoryBasketRepository : IBasketRepository
 {

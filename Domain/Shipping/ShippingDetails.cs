@@ -1,4 +1,4 @@
-namespace BasketManagementAPI.Domain.Shipping;
+namespace BasketManagememtAPI.Domain.Shipping;
 
 public sealed record ShippingDetails(string Country, int Cost);
 

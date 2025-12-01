@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace BasketManagementAPI.Contracts.Requests;
+namespace BasketManagememtAPI.Contracts.Requests;
 
 public sealed record AddItemsRequest(IEnumerable<AddItemRequest> Items);
 

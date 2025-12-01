@@ -1,6 +1,6 @@
-using BasketManagementAPI.Domain.Shipping;
+using BasketManagememtAPI.Domain.Shipping;
 
-namespace BasketManagementAPI.Shipping;
+namespace BasketManagememtAPI.Shipping;
 
 public interface IShippingPolicy
 {

@@ -1,4 +1,4 @@
-namespace BasketManagementAPI.Domain.Discounts;
+namespace BasketManagememtAPI.Domain.Discounts;
 
 public interface IBasketItemDiscount
 {

@@ -1,4 +1,4 @@
-namespace BasketManagementAPI.Contracts.Requests;
+namespace BasketManagememtAPI.Contracts.Requests;
 
 public sealed record ItemDiscountRequest(string Type, int Amount);
 

@@ -1,6 +1,6 @@
 using System;
 
-namespace BasketManagementAPI.Contracts.Responses;
+namespace BasketManagememtAPI.Contracts.Responses;
 
 public sealed record BasketResponse(
     Guid Id,

@@ -1,4 +1,4 @@
-namespace BasketManagementAPI.Contracts.Requests;
+namespace BasketManagememtAPI.Contracts.Requests;
 
 public sealed record ApplyDiscountRequest(string Code, decimal Percentage);
 

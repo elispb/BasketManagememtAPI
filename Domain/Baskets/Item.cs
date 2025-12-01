@@ -1,7 +1,7 @@
 using System;
-using BasketManagementAPI.Domain.Discounts;
+using BasketManagememtAPI.Domain.Discounts;
 
-namespace BasketManagementAPI.Domain.Baskets;
+namespace BasketManagememtAPI.Domain.Baskets;
 
 public sealed class Item
 {
