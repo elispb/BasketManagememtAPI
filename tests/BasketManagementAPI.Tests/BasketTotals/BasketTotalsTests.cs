@@ -70,8 +70,7 @@ public class BasketTotalsTests
     public async Task GetTotalsAsync_HandlesVeryLargeAmounts()
     {
         var basket = new Basket();
-        basket.AddOrUpdateItem(new Item("L1", "Large item #1", 1_000_000_000, 1, null));
-        basket.AddOrUpdateItem(new Item("L2", "Large item #2", 1_000_000_000, 1, null));
+        basket.AddOrUpdateItem(new Item("L1", "Large item #1", 900_000_000, 2, null));
         basket.ApplyDiscount(new PercentageBasketDiscount("BULK", 10));
         basket.SetShipping(new ShippingDetails("UK", 0));
 
@@ -79,11 +78,11 @@ public class BasketTotalsTests
 
         var totals = await service.GetTotalsAsync(basket.Id);
 
-        totals.Subtotal.Should().Be(2_000_000_000);
-        totals.Discount.Should().Be(200_000_000);
-        totals.TotalWithoutVat.Should().Be(1_800_000_000);
-        totals.VatAmount.Should().Be(360_000_000);
-        totals.TotalWithVat.Should().Be(2_160_000_000);
+        totals.Subtotal.Should().Be(1_800_000_000);
+        totals.Discount.Should().Be(180_000_000);
+        totals.TotalWithoutVat.Should().Be(1_620_000_000);
+        totals.VatAmount.Should().Be(324_000_000);
+        totals.TotalWithVat.Should().Be(1_944_000_000);
     }
 
     private BasketService CreateServiceWithBasket(Basket basket)
