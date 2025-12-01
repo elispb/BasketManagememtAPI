@@ -145,5 +145,3 @@ public sealed class BasketService : IBasketService
         return new Totals(subtotal, discount, shipping, totalWithoutVat, vatAmount, totalWithVat);
     }
 }
-
-

@@ -10,5 +10,3 @@ public sealed record ItemDefinition(
     ItemDiscountDefinition? ItemDiscount);
 
 public sealed record ItemDiscountDefinition(ItemDiscountType Type, int Amount);
-
-

@@ -91,4 +91,3 @@ public class BasketTotalsTests
         return new BasketService(_repositoryMock.Object, _shippingPolicyMock.Object);
     }
 }
-

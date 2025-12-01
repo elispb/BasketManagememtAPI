@@ -12,4 +12,3 @@ public sealed class AddShippingRequestValidator : AbstractValidator<AddShippingR
             .WithMessage("Country is required for shipping.");
     }
 }
-
