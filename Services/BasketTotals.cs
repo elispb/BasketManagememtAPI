@@ -1,10 +1,10 @@
 namespace BasketManagementAPI.Services;
 
 public sealed record BasketTotals(
-    decimal Subtotal,
-    decimal Discount,
-    decimal Shipping,
-    decimal TotalWithoutVat,
-    decimal VatAmount,
-    decimal TotalWithVat);
+    int Subtotal,
+    int Discount,
+    int Shipping,
+    int TotalWithoutVat,
+    int VatAmount,
+    int TotalWithVat);
 

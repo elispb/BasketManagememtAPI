@@ -4,6 +4,6 @@ public interface IBasketItemDiscount
 {
     string Description { get; }
 
-    decimal CalculateTotal(decimal unitPrice, int quantity);
+    int CalculateTotal(int unitPrice, int quantity);
 }
 

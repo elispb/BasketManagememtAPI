@@ -12,11 +12,11 @@ public sealed record BasketResponse(
 public sealed record BasketItemResponse(
     string ProductId,
     string Name,
-    decimal UnitPrice,
+    int UnitPrice,
     int Quantity,
-    decimal Total,
+    int Total,
     bool HasDiscount,
     string? DiscountDescription);
 
-public sealed record ShippingDetailsResponse(string Country, decimal Cost);
+public sealed record ShippingDetailsResponse(string Country, int Cost);
 

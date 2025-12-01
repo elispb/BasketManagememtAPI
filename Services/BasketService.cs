@@ -145,10 +145,10 @@ public sealed class BasketService : IBasketService
     {
         var subtotal = basket.Items.Sum(item => item.Total());
         var eligibleAmount = basket.Items.Where(item => !item.HasItemDiscount).Sum(item => item.Total());
-        var discount = basket.BasketDiscount?.CalculateDiscount(eligibleAmount) ?? 0m;
-        var shipping = basket.ShippingDetails?.Cost ?? 0m;
-        var totalWithoutVat = Math.Max(subtotal - discount + shipping, 0m);
-        var vatAmount = Math.Round(totalWithoutVat * VatRate, 2, MidpointRounding.AwayFromZero);
+        var discount = basket.BasketDiscount?.CalculateDiscount(eligibleAmount) ?? 0;
+        var shipping = basket.ShippingDetails?.Cost ?? 0;
+        var totalWithoutVat = Math.Max(subtotal - discount + shipping, 0);
+        var vatAmount = (int)Math.Round(totalWithoutVat * VatRate, 0, MidpointRounding.AwayFromZero);
         var totalWithVat = totalWithoutVat + vatAmount;
 
         return new BasketTotals(subtotal, discount, shipping, totalWithoutVat, vatAmount, totalWithVat);

@@ -106,7 +106,7 @@ public sealed class BasketItemsController : ControllerBase
     private static ItemPriceResponse MapPrice(BasketItem item)
     {
         var lineTotal = item.Total();
-        var vatAmount = Math.Round(lineTotal * 0.20m, 2, MidpointRounding.AwayFromZero);
+        var vatAmount = (int)Math.Round(lineTotal * 0.20m, 0, MidpointRounding.AwayFromZero);
         return new ItemPriceResponse(lineTotal, vatAmount, lineTotal + vatAmount);
     }
 }

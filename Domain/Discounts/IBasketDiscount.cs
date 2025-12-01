@@ -4,6 +4,6 @@ public interface IBasketDiscount
 {
     string Code { get; }
 
-    decimal CalculateDiscount(decimal eligibleAmount);
+    int CalculateDiscount(int eligibleAmount);
 }
 

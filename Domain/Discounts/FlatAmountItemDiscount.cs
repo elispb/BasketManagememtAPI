@@ -4,11 +4,11 @@ namespace BasketManagementAPI.Domain.Discounts;
 
 public sealed class FlatAmountItemDiscount : IBasketItemDiscount
 {
-    public string Description => $"Flat amount off {AmountTaken:C}";
+    public string Description => $"Flat amount off {AmountTaken}p";
 
-    public decimal AmountTaken { get; }
+    public int AmountTaken { get; }
 
-    public FlatAmountItemDiscount(decimal amountTaken)
+    public FlatAmountItemDiscount(int amountTaken)
     {
         if (amountTaken <= 0)
         {
@@ -18,7 +18,7 @@ public sealed class FlatAmountItemDiscount : IBasketItemDiscount
         AmountTaken = amountTaken;
     }
 
-    public decimal CalculateTotal(decimal unitPrice, int quantity)
+    public int CalculateTotal(int unitPrice, int quantity)
     {
         var discountedUnitPrice = Math.Max(unitPrice - AmountTaken, 0);
         return discountedUnitPrice * quantity;

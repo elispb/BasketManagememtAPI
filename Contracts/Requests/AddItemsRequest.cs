@@ -7,7 +7,7 @@ public sealed record AddItemsRequest(IEnumerable<AddItemRequest> Items);
 public sealed record AddItemRequest(
     string ProductId,
     string Name,
-    decimal UnitPrice,
+    int UnitPrice,
     int Quantity,
     ItemDiscountRequest? ItemDiscount);
 

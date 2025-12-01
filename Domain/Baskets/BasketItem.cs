@@ -9,7 +9,7 @@ public sealed class BasketItem
 
     public string Name { get; }
 
-    public decimal UnitPrice { get; private set; }
+    public int UnitPrice { get; private set; }
 
     public int Quantity { get; private set; }
 
@@ -17,7 +17,7 @@ public sealed class BasketItem
 
     public bool HasItemDiscount => ItemDiscount is not null;
 
-    public BasketItem(string productId, string name, decimal unitPrice, int quantity, IBasketItemDiscount? itemDiscount)
+    public BasketItem(string productId, string name, int unitPrice, int quantity, IBasketItemDiscount? itemDiscount)
     {
         if (string.IsNullOrWhiteSpace(productId))
         {
@@ -56,7 +56,7 @@ public sealed class BasketItem
         Quantity += amount;
     }
 
-    public decimal Total()
+    public int Total()
     {
         if (ItemDiscount is not null)
         {

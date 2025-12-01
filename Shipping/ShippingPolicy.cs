@@ -4,8 +4,8 @@ namespace BasketManagementAPI.Shipping;
 
 public sealed class ShippingPolicy : IShippingPolicy
 {
-    private const decimal UkShippingCost = 4.99m;
-    private const decimal DefaultShippingCost = 12.99m;
+    private const int UkShippingCost = 499;
+    private const int DefaultShippingCost = 1299;
 
     public ShippingDetails Resolve(string country)
     {

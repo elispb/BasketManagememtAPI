@@ -1,4 +1,4 @@
-using System.Globalization;
+using System;
 
 namespace BasketManagementAPI.Domain.Discounts;
 
@@ -20,10 +20,10 @@ public sealed class PercentageBasketDiscount : IBasketDiscount
         Percentage = percentage;
     }
 
-    public decimal CalculateDiscount(decimal eligibleAmount)
+    public int CalculateDiscount(int eligibleAmount)
     {
         var discount = eligibleAmount * Percentage / 100m;
-        return Math.Round(discount, 2, MidpointRounding.AwayFromZero);
+        return (int)Math.Round(discount, 0, MidpointRounding.AwayFromZero);
     }
 }
 

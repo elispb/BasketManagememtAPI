@@ -3,9 +3,9 @@ namespace BasketManagementAPI.Services;
 public sealed record BasketItemDefinition(
     string ProductId,
     string Name,
-    decimal UnitPrice,
+    int UnitPrice,
     int Quantity,
     ItemDiscountDefinition? ItemDiscount);
 
-public sealed record ItemDiscountDefinition(string Type, decimal Amount);
+public sealed record ItemDiscountDefinition(string Type, int Amount);
 
