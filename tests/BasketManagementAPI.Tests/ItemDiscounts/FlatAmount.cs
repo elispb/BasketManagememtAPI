@@ -1,5 +1,6 @@
 using BasketManagementAPI.Domain.Discounts;
 using FluentAssertions;
+using Xunit;
 
 namespace BasketManagementAPI.Tests.ItemDiscounts
 {

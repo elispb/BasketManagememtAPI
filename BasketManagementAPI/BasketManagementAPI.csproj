@@ -7,6 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Exclude test sources which are located inside the project directory under `tests/` -->
+    <Compile Remove="tests\**\*.cs" />
+    <EmbeddedResource Remove="tests\**\*.resx" />
+    <None Remove="tests\**\*.*" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.1" />
   </ItemGroup>
