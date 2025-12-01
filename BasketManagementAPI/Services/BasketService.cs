@@ -123,17 +123,10 @@ public sealed class BasketService : IBasketService
             return null;
         }
 
-        var trimmedType = definition.Type?.Trim();
-
-        if (string.IsNullOrWhiteSpace(trimmedType))
+        return definition.Type switch
         {
-            throw new ArgumentException("Discount type is required when specifying an item discount.", nameof(definition));
-        }
-
-        return trimmedType.ToLowerInvariant() switch
-        {
-            "flatamount" => new FlatAmountItemDiscount(definition.Amount),
-            "bogo" => new BuyOneGetOneFreeItemDiscount(),
+            ItemDiscountType.FlatAmount => new FlatAmountItemDiscount(definition.Amount),
+            ItemDiscountType.Bogo => new BuyOneGetOneFreeItemDiscount(),
             _ => throw new NotSupportedException($"Item discount type '{definition.Type}' is not supported.")
         };
     }
