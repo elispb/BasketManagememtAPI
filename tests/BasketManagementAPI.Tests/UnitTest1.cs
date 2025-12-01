@@ -1,4 +1,4 @@
-using BasketManagementAPI.Domain.Discounts;
+﻿using BasketManagementAPI.Domain.Discounts;
 using FluentAssertions;
 using Xunit;
 
@@ -9,11 +9,11 @@ public class BasketItemDiscountTests
     [Fact]
     public void FlatAmountItemDiscount_CannotProduceNegativeTotals()
     {
-        var discount = new FlatAmountItemDiscount(5m);
+        var discount = new FlatAmountItemDiscount(500);
 
-        var total = discount.CalculateTotal(3m, 4);
+        var total = discount.CalculateTotal(300, 4);
 
-        total.Should().Be(0m);
+        total.Should().Be(0);
     }
 
     [Fact]
@@ -21,9 +21,9 @@ public class BasketItemDiscountTests
     {
         var discount = new BuyOneGetOneFreeItemDiscount();
 
-        var total = discount.CalculateTotal(12.5m, 2);
+        var total = discount.CalculateTotal(1250, 2);
 
-        total.Should().Be(12.5m);
+        total.Should().Be(1250);
     }
 
     [Fact]
@@ -31,8 +31,8 @@ public class BasketItemDiscountTests
     {
         var discount = new BuyOneGetOneFreeItemDiscount();
 
-        var total = discount.CalculateTotal(12.5m, 1);
+        var total = discount.CalculateTotal(1250, 1);
 
-        total.Should().Be(12.5m);
+        total.Should().Be(1250);
     }
 }
