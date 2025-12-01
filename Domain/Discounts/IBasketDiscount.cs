@@ -1,4 +1,4 @@
-namespace BasketManagememtAPI.Domain.Discounts;
+namespace BasketManagementAPI.Domain.Discounts;
 
 public interface IBasketDiscount
 {
@@ -6,4 +6,5 @@ public interface IBasketDiscount
 
     int CalculateDiscount(int eligibleAmount);
 }
+
 

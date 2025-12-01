@@ -1,7 +1,7 @@
 using System;
-using BasketManagememtAPI.Domain.Discounts;
+using BasketManagementAPI.Domain.Discounts;
 
-namespace BasketManagememtAPI.Domain.Baskets;
+namespace BasketManagementAPI.Domain.Baskets;
 
 public sealed class Item
 {
@@ -82,4 +82,5 @@ public sealed class Item
         ItemDiscount = discount ?? throw new ArgumentNullException(nameof(discount));
     }
 }
+
 

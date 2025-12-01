@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace BasketManagememtAPI.Contracts.Requests;
+namespace BasketManagementAPI.Contracts.Requests;
 
 public sealed record AddItemsRequest(IEnumerable<AddItemRequest> Items);
 
@@ -10,4 +10,5 @@ public sealed record AddItemRequest(
     int UnitPrice,
     int Quantity,
     ItemDiscountRequest? ItemDiscount);
+
 

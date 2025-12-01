@@ -1,6 +1,6 @@
-using BasketManagememtAPI.Repositories;
-using BasketManagememtAPI.Services;
-using BasketManagememtAPI.Shipping;
+using BasketManagementAPI.Repositories;
+using BasketManagementAPI.Services;
+using BasketManagementAPI.Shipping;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,3 +27,4 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+

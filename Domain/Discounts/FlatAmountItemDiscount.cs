@@ -1,6 +1,6 @@
 using System;
 
-namespace BasketManagememtAPI.Domain.Discounts;
+namespace BasketManagementAPI.Domain.Discounts;
 
 public sealed class FlatAmountItemDiscount : IBasketItemDiscount
 {
@@ -24,4 +24,5 @@ public sealed class FlatAmountItemDiscount : IBasketItemDiscount
         return discountedUnitPrice * quantity;
     }
 }
+
 

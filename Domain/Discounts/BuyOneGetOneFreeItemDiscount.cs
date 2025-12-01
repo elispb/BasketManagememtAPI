@@ -1,4 +1,4 @@
-namespace BasketManagememtAPI.Domain.Discounts;
+namespace BasketManagementAPI.Domain.Discounts;
 
 public sealed record BuyOneGetOneFreeItemDiscount : IBasketItemDiscount
 {
@@ -10,4 +10,5 @@ public sealed record BuyOneGetOneFreeItemDiscount : IBasketItemDiscount
         return payableQuantity * unitPrice;
     }
 }
+
 

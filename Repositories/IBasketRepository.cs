@@ -1,6 +1,6 @@
-using BasketManagememtAPI.Domain.Baskets;
+using BasketManagementAPI.Domain.Baskets;
 
-namespace BasketManagememtAPI.Repositories;
+namespace BasketManagementAPI.Repositories;
 
 public interface IBasketRepository
 {
@@ -10,4 +10,3 @@ public interface IBasketRepository
 
     Task SaveAsync(Basket basket);
 }
-

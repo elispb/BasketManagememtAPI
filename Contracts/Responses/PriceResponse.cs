@@ -1,4 +1,4 @@
-namespace BasketManagememtAPI.Contracts.Responses;
+namespace BasketManagementAPI.Contracts.Responses;
 
 public sealed record PriceResponse(
     int Subtotal,
@@ -7,4 +7,5 @@ public sealed record PriceResponse(
     int TotalWithoutVat,
     int VatAmount,
     int TotalWithVat);
+
 

@@ -1,6 +1,7 @@
-using BasketManagememtAPI.Domain.Baskets;
+using BasketManagementAPI.Domain.Baskets;
 
-namespace BasketManagememtAPI.Services;
+namespace BasketManagementAPI.Services;
 
 public sealed record BasketSnapshot(Basket Basket, Totals Totals);
+
 

@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
-using BasketManagememtAPI.Domain.Baskets;
+using BasketManagementAPI.Domain.Baskets;
 
-namespace BasketManagememtAPI.Repositories;
+namespace BasketManagementAPI.Repositories;
 
 public sealed class InMemoryBasketRepository : IBasketRepository
 {
@@ -33,4 +33,5 @@ public sealed class InMemoryBasketRepository : IBasketRepository
         return Task.CompletedTask;
     }
 }
+
 

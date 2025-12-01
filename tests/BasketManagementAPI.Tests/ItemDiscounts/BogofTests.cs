@@ -1,4 +1,4 @@
-﻿using BasketManagememtAPI.Domain.Discounts;
+using BasketManagementAPI.Domain.Discounts;
 using FluentAssertions;
 using Xunit;
 
@@ -40,3 +40,4 @@ public class BasketItemDiscountTests
         total.Should().Be(expectedTotal);
     }
 }
+

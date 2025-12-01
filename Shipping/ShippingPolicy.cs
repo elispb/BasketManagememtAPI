@@ -1,6 +1,6 @@
-using BasketManagememtAPI.Domain.Shipping;
+using BasketManagementAPI.Domain.Shipping;
 
-namespace BasketManagememtAPI.Shipping;
+namespace BasketManagementAPI.Shipping;
 
 public sealed class ShippingPolicy : IShippingPolicy
 {
@@ -21,4 +21,5 @@ public sealed class ShippingPolicy : IShippingPolicy
         return new ShippingDetails(string.IsNullOrWhiteSpace(normalized) ? "Unknown" : normalized, cost);
     }
 }
+
 

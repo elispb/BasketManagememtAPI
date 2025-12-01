@@ -1,4 +1,4 @@
-namespace BasketManagememtAPI.Services;
+namespace BasketManagementAPI.Services;
 
 public sealed record Totals(
     int Subtotal,
@@ -7,4 +7,5 @@ public sealed record Totals(
     int TotalWithoutVat,
     int VatAmount,
     int TotalWithVat);
+
 

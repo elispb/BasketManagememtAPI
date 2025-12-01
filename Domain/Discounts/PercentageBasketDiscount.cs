@@ -1,6 +1,6 @@
 using System;
 
-namespace BasketManagememtAPI.Domain.Discounts;
+namespace BasketManagementAPI.Domain.Discounts;
 
 public sealed class PercentageBasketDiscount : IBasketDiscount
 {
@@ -26,4 +26,5 @@ public sealed class PercentageBasketDiscount : IBasketDiscount
         return (int)Math.Round(discount, 0, MidpointRounding.AwayFromZero);
     }
 }
+
 

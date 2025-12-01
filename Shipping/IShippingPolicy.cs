@@ -1,9 +1,10 @@
-using BasketManagememtAPI.Domain.Shipping;
+using BasketManagementAPI.Domain.Shipping;
 
-namespace BasketManagememtAPI.Shipping;
+namespace BasketManagementAPI.Shipping;
 
 public interface IShippingPolicy
 {
     ShippingDetails Resolve(string country);
 }
+
 

@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using BasketManagememtAPI.Domain.Baskets;
-using BasketManagememtAPI.Domain.Discounts;
-using BasketManagememtAPI.Repositories;
-using BasketManagememtAPI.Shipping;
+using BasketManagementAPI.Domain.Baskets;
+using BasketManagementAPI.Domain.Discounts;
+using BasketManagementAPI.Repositories;
+using BasketManagementAPI.Shipping;
 using BasketManagementAPI.Domain.Discounts;
 
-namespace BasketManagememtAPI.Services;
+namespace BasketManagementAPI.Services;
 
 public sealed class BasketService : IBasketService
 {
@@ -155,4 +155,5 @@ public sealed class BasketService : IBasketService
         return new Totals(subtotal, discount, shipping, totalWithoutVat, vatAmount, totalWithVat);
     }
 }
+
 

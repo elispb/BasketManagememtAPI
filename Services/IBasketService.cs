@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using BasketManagememtAPI.Domain.Baskets;
+using BasketManagementAPI.Domain.Baskets;
 
-namespace BasketManagememtAPI.Services;
+namespace BasketManagementAPI.Services;
 
 public interface IBasketService
 {
@@ -21,4 +21,5 @@ public interface IBasketService
 
     Task<Item> ApplyItemDiscountAsync(Guid basketId, string productId, ItemDiscountDefinition discount);
 }
+
 

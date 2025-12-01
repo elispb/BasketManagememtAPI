@@ -1,7 +1,5 @@
-﻿using BasketManagementAPI.Domain.Discounts;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using BasketManagementAPI.Domain.Discounts;
+using FluentAssertions;
 
 namespace BasketManagementAPI.Tests.ItemDiscounts
 {
@@ -18,3 +16,4 @@ namespace BasketManagementAPI.Tests.ItemDiscounts
         }
     }
 }
+

@@ -1,4 +1,4 @@
-namespace BasketManagememtAPI.Services;
+namespace BasketManagementAPI.Services;
 
 public sealed record ItemDefinition(
     string ProductId,
@@ -8,4 +8,5 @@ public sealed record ItemDefinition(
     ItemDiscountDefinition? ItemDiscount);
 
 public sealed record ItemDiscountDefinition(string Type, int Amount);
+
 

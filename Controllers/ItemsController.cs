@@ -1,12 +1,12 @@
 using System;
 using System.Linq;
-using BasketManagememtAPI.Contracts.Requests;
-using BasketManagememtAPI.Contracts.Responses;
-using BasketManagememtAPI.Domain.Baskets;
-using BasketManagememtAPI.Services;
+using BasketManagementAPI.Contracts.Requests;
+using BasketManagementAPI.Contracts.Responses;
+using BasketManagementAPI.Domain.Baskets;
+using BasketManagementAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BasketManagememtAPI.Controllers;
+namespace BasketManagementAPI.Controllers;
 
 [ApiController]
 [Route("api/baskets/{basketId:guid}/items")]
@@ -110,4 +110,5 @@ public sealed class ItemsController : ControllerBase
         return new ItemPriceResponse(lineTotal, vatAmount, lineTotal + vatAmount);
     }
 }
+
 

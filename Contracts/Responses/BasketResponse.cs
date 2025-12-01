@@ -1,6 +1,6 @@
 using System;
 
-namespace BasketManagememtAPI.Contracts.Responses;
+namespace BasketManagementAPI.Contracts.Responses;
 
 public sealed record BasketResponse(
     Guid Id,
@@ -19,4 +19,5 @@ public sealed record ItemResponse(
     string? DiscountDescription);
 
 public sealed record ShippingDetailsResponse(string Country, int Cost);
+
 
