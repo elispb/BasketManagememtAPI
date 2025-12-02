@@ -15,9 +15,13 @@ public sealed class Basket
 
     public IBasketDiscount? BasketDiscount { get; private set; }
 
-    public Basket()
+    public Basket() : this(Guid.NewGuid())
     {
-        Id = Guid.NewGuid();
+    }
+
+    public Basket(Guid id)
+    {
+        Id = id;
         Items = new List<Item>();
     }
 

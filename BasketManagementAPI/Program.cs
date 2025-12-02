@@ -16,7 +16,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<AddItemsRequestValidator>();
 
-builder.Services.AddSingleton<IBasketRepository, InMemoryBasketRepository>();
+builder.Services.AddSingleton<IBasketRepository, SqlBasketRepository>();
 builder.Services.AddSingleton<IShippingPolicy, ShippingPolicy>();
 builder.Services.AddScoped<IBasketService, BasketService>();
 
