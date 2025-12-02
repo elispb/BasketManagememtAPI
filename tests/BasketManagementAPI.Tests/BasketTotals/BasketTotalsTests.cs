@@ -13,6 +13,7 @@ public class BasketTotalsTests
 {
     private readonly Mock<IBasketRepository> _repositoryMock;
     private readonly Mock<IShippingPolicy> _shippingPolicyMock;
+    private readonly Mock<IDiscountDefinitionRepository> _discountDefinitionRepositoryMock;
 
     public BasketTotalsTests()
     {
@@ -21,6 +22,10 @@ public class BasketTotalsTests
         _repositoryMock.Setup(r => r.SaveAsync(It.IsAny<Basket>())).Returns(Task.CompletedTask);
 
         _shippingPolicyMock = new Mock<IShippingPolicy>();
+        _discountDefinitionRepositoryMock = new Mock<IDiscountDefinitionRepository>();
+        _discountDefinitionRepositoryMock
+            .Setup(r => r.UpsertAsync(It.IsAny<string>(), It.IsAny<decimal>()))
+            .ReturnsAsync(Guid.NewGuid());
         _shippingPolicyMock.Setup(p => p.Resolve(It.IsAny<string>())).Returns(new ShippingDetails("UK", 0));
     }
 
@@ -88,6 +93,6 @@ public class BasketTotalsTests
     private BasketService CreateServiceWithBasket(Basket basket)
     {
         _repositoryMock.Setup(r => r.GetAsync(It.IsAny<Guid>())).ReturnsAsync(basket);
-        return new BasketService(_repositoryMock.Object, _shippingPolicyMock.Object);
+        return new BasketService(_repositoryMock.Object, _shippingPolicyMock.Object, _discountDefinitionRepositoryMock.Object);
     }
 }

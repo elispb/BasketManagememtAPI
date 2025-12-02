@@ -15,6 +15,8 @@ public sealed class Basket
 
     public IBasketDiscount? BasketDiscount { get; private set; }
 
+    public Guid? DiscountDefinitionId { get; private set; }
+
     public Basket() : this(Guid.NewGuid())
     {
     }
@@ -50,9 +52,10 @@ public sealed class Basket
         return Items.Remove(item);
     }
 
-    public void ApplyDiscount(IBasketDiscount discount)
+    public void ApplyDiscount(IBasketDiscount discount, Guid? discountDefinitionId = null)
     {
         BasketDiscount = discount;
+        DiscountDefinitionId = discountDefinitionId;
     }
 
     public void SetShipping(ShippingDetails shipping)

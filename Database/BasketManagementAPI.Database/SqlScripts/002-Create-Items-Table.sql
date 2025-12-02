@@ -3,12 +3,7 @@ BEGIN
     EXEC('CREATE SCHEMA dbo;');
 END
 
-IF NOT EXISTS (
-    SELECT 1
-    FROM INFORMATION_SCHEMA.TABLES
-    WHERE TABLE_SCHEMA = 'dbo'
-      AND TABLE_NAME = 'Items'
-)
+IF OBJECT_ID('dbo.Items', 'U') IS NULL
 BEGIN
     CREATE TABLE dbo.Items (
         Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
@@ -25,3 +20,4 @@ BEGIN
     );
     CREATE INDEX IX_Items_BasketId ON dbo.Items (BasketId);
 END
+

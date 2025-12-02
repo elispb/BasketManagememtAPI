@@ -3,15 +3,15 @@ BEGIN
     EXEC('CREATE SCHEMA dbo;');
 END
 
-IF OBJECT_ID('dbo.ShippingCosts', 'U') IS NULL
+IF OBJECT_ID('dbo.BasketShipping', 'U') IS NULL
 BEGIN
-    CREATE TABLE dbo.ShippingCosts (
-        Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+    CREATE TABLE dbo.BasketShipping (
+        BasketId UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
         Country NVARCHAR(200) NOT NULL,
         Cost INT NOT NULL,
         CreatedAt DATETIME2 NOT NULL,
         ModifiedAt DATETIME2 NOT NULL,
-        CONSTRAINT UQ_ShippingCosts_Country UNIQUE (Country)
+        CONSTRAINT FK_BasketShipping_Baskets FOREIGN KEY (BasketId) REFERENCES dbo.Baskets(Id) ON DELETE CASCADE
     );
 END
 
