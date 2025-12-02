@@ -17,3 +17,4 @@ COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "BasketManagementAPI.dll"]
 
 
+

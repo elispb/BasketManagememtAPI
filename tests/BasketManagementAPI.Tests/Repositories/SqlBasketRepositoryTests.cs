@@ -1,11 +1,8 @@
-using System;
-using System.Collections.Generic;
 using BasketManagementAPI.Domain.Baskets;
 using BasketManagementAPI.Repositories;
 using FluentAssertions;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
-using Xunit;
 
 namespace BasketManagementAPI.Tests.Repositories;
 
