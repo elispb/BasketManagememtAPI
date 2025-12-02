@@ -3,7 +3,6 @@ using BasketManagementAPI.Domain.Baskets;
 using BasketManagementAPI.Domain.Discounts;
 using BasketManagementAPI.Domain.Shipping;
 using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Configuration;
 
 namespace BasketManagementAPI.Repositories;
 
@@ -44,10 +43,7 @@ public sealed class SqlBasketRepository : IBasketRepository
 
             await command.ExecuteNonQueryAsync();
 
-            foreach (var item in basket.Items)
-            {
-                await InsertItemAsync(connection, basket.Id, item, transaction);
-            }
+            await InsertItemsAsync(connection, basket.Id, basket.Items, transaction);
 
             if (basket.ShippingDetails is not null)
             {
@@ -77,10 +73,7 @@ public sealed class SqlBasketRepository : IBasketRepository
         {
             await UpdateBasketAsync(connection, basket, transaction);
             await DeleteItemsAsync(connection, basket.Id, transaction);
-            foreach (var item in basket.Items)
-            {
-                await InsertItemAsync(connection, basket.Id, item, transaction);
-            }
+            await InsertItemsAsync(connection, basket.Id, basket.Items, transaction);
             await HandleBasketShippingAsync(connection, basket, transaction);
 
             await transaction.CommitAsync();
@@ -246,24 +239,78 @@ public sealed class SqlBasketRepository : IBasketRepository
         await command.ExecuteNonQueryAsync();
     }
 
-    private static async Task InsertItemAsync(SqlConnection connection, Guid basketId, Item item, SqlTransaction transaction)
+    private static async Task InsertItemsAsync(SqlConnection connection, Guid basketId, IEnumerable<Item> items, SqlTransaction transaction)
     {
-        await using var command = connection.CreateCommand();
-        command.Transaction = transaction;
-        command.CommandText = "usp_InsertItem";
-        command.CommandType = CommandType.StoredProcedure;
-        command.Parameters.AddWithValue("@Id", Guid.NewGuid());
-        command.Parameters.AddWithValue("@BasketId", basketId);
-        command.Parameters.AddWithValue("@ProductId", item.ProductId);
-        command.Parameters.AddWithValue("@Name", item.Name);
-        command.Parameters.AddWithValue("@UnitPrice", item.UnitPrice);
-        command.Parameters.AddWithValue("@Quantity", item.Quantity);
+        var itemList = items.ToList();
+        if (itemList.Count == 0)
+        {
+            return;
+        }
 
-        var (type, amount) = GetItemDiscountData(item.ItemDiscount);
-        command.Parameters.AddWithValue("@ItemDiscountType", type.HasValue ? (object)type.Value : DBNull.Value);
-        command.Parameters.AddWithValue("@ItemDiscountAmount", amount.HasValue ? (object)amount.Value : DBNull.Value);
+        var table = CreateItemDataTable();
+        var now = DateTime.UtcNow;
 
-        await command.ExecuteNonQueryAsync();
+        foreach (var item in itemList)
+        {
+            var (type, amount) = GetItemDiscountData(item.ItemDiscount);
+
+            var row = table.NewRow();
+            row["Id"] = Guid.NewGuid();
+            row["BasketId"] = basketId;
+            row["ProductId"] = item.ProductId;
+            row["Name"] = item.Name;
+            row["UnitPrice"] = item.UnitPrice;
+            row["Quantity"] = item.Quantity;
+            row["ItemDiscountType"] = type.HasValue ? (object)type.Value : DBNull.Value;
+            row["ItemDiscountAmount"] = amount.HasValue ? (object)amount.Value : DBNull.Value;
+            row["CreatedAt"] = now;
+            row["ModifiedAt"] = now;
+            table.Rows.Add(row);
+        }
+
+        using var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.Default, transaction)
+        {
+            DestinationTableName = "dbo.Items"
+        };
+
+        bulkCopy.ColumnMappings.Add("Id", "Id");
+        bulkCopy.ColumnMappings.Add("BasketId", "BasketId");
+        bulkCopy.ColumnMappings.Add("ProductId", "ProductId");
+        bulkCopy.ColumnMappings.Add("Name", "Name");
+        bulkCopy.ColumnMappings.Add("UnitPrice", "UnitPrice");
+        bulkCopy.ColumnMappings.Add("Quantity", "Quantity");
+        bulkCopy.ColumnMappings.Add("ItemDiscountType", "ItemDiscountType");
+        bulkCopy.ColumnMappings.Add("ItemDiscountAmount", "ItemDiscountAmount");
+        bulkCopy.ColumnMappings.Add("CreatedAt", "CreatedAt");
+        bulkCopy.ColumnMappings.Add("ModifiedAt", "ModifiedAt");
+
+        await bulkCopy.WriteToServerAsync(table);
+    }
+
+    private static DataTable CreateItemDataTable()
+    {
+        var table = new DataTable();
+        table.Columns.Add(new DataColumn("Id", typeof(Guid)));
+        table.Columns.Add(new DataColumn("BasketId", typeof(Guid)));
+        table.Columns.Add(new DataColumn("ProductId", typeof(string)));
+        table.Columns.Add(new DataColumn("Name", typeof(string)));
+        table.Columns.Add(new DataColumn("UnitPrice", typeof(int)));
+        table.Columns.Add(new DataColumn("Quantity", typeof(int)));
+
+        table.Columns.Add(new DataColumn("ItemDiscountType", typeof(byte))
+        {
+            AllowDBNull = true
+        });
+
+        table.Columns.Add(new DataColumn("ItemDiscountAmount", typeof(int))
+        {
+            AllowDBNull = true
+        });
+
+        table.Columns.Add(new DataColumn("CreatedAt", typeof(DateTime)));
+        table.Columns.Add(new DataColumn("ModifiedAt", typeof(DateTime)));
+
+        return table;
     }
 
     private static async Task HandleBasketShippingAsync(SqlConnection connection, Basket basket, SqlTransaction transaction)
