@@ -30,4 +30,3 @@ public sealed class AddItemRequestValidator : AbstractValidator<AddItemRequest>
         });
     }
 }
-

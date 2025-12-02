@@ -12,6 +12,3 @@ BEGIN
         ModifiedAt DATETIME2 NOT NULL
     );
 END
-
-
-

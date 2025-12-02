@@ -16,4 +16,3 @@ public sealed class AddItemsRequestValidator : AbstractValidator<AddItemsRequest
             .SetValidator(new AddItemRequestValidator());
     }
 }
-

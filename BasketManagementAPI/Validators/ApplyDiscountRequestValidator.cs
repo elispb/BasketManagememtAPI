@@ -18,4 +18,3 @@ public sealed class ApplyDiscountRequestValidator : AbstractValidator<ApplyDisco
             .WithMessage("Percentage cannot exceed 100.");
     }
 }
-

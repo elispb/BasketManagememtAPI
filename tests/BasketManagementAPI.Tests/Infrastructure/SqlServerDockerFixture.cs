@@ -81,6 +81,3 @@ public sealed class SqlServerDockerFixture : IAsyncLifetime
         }
     }
 }
-
-
-
