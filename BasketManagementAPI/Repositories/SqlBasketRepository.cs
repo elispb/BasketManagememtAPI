@@ -318,10 +318,10 @@ public sealed class SqlBasketRepository : IBasketRepository
         await using var reader = await command.ExecuteReaderAsync();
         if (await reader.ReadAsync())
         {
-            var countryCodeValue = reader.GetInt32(0);
+            var countryCodeRaw = reader.GetString(0);
             var cost = reader.GetInt32(1);
-            var countryCode = Enum.IsDefined(typeof(CountryCode), countryCodeValue)
-                ? (CountryCode)countryCodeValue
+            var countryCode = CountryCodeParser.TryParse(countryCodeRaw, out var parsed)
+                ? parsed
                 : CountryCode.Unknown;
             basket.SetShipping(new ShippingDetails(countryCode, cost));
         }

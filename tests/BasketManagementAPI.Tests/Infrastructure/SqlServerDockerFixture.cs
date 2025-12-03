@@ -113,14 +113,14 @@ public sealed class SqlServerDockerFixture : IAsyncLifetime
             BEGIN
                 IF NOT EXISTS (SELECT 1 FROM dbo.ShippingCosts WHERE Country = 'Testland')
                 BEGIN
-                    INSERT INTO dbo.ShippingCosts (Id, Country, Cost, CreatedAt, ModifiedAt)
-                    VALUES (NEWID(), 'Testland', 1500, SYSUTCDATETIME(), SYSUTCDATETIME());
+                    INSERT INTO dbo.ShippingCosts (Id, Country, CountryCode, Cost, CreatedAt, ModifiedAt)
+                    VALUES (NEWID(), 'Testland', 100, 1500, SYSUTCDATETIME(), SYSUTCDATETIME());
                 END
 
                 IF NOT EXISTS (SELECT 1 FROM dbo.ShippingCosts WHERE Country = 'Sandbox Country')
                 BEGIN
-                    INSERT INTO dbo.ShippingCosts (Id, Country, Cost, CreatedAt, ModifiedAt)
-                    VALUES (NEWID(), 'Sandbox Country', 2500, SYSUTCDATETIME(), SYSUTCDATETIME());
+                    INSERT INTO dbo.ShippingCosts (Id, Country, CountryCode, Cost, CreatedAt, ModifiedAt)
+                    VALUES (NEWID(), 'Sandbox Country', 101, 2500, SYSUTCDATETIME(), SYSUTCDATETIME());
                 END
             END
             """;

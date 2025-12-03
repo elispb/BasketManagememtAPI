@@ -5,6 +5,7 @@ using BasketManagementAPI.Domain.Baskets;
 using BasketManagementAPI.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace BasketManagementAPI.Controllers;
 
@@ -16,14 +17,16 @@ namespace BasketManagementAPI.Controllers;
 public sealed class BasketsController : ControllerBase
 {
     private readonly IBasketService _basketService;
+    private readonly ILogger<BasketsController> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BasketsController"/> class.
     /// </summary>
     /// <param name="basketService">Provides basket management operations.</param>
-    public BasketsController(IBasketService basketService)
+    public BasketsController(IBasketService basketService, ILogger<BasketsController> logger)
     {
         _basketService = basketService;
+        _logger = logger;
     }
 
     /// <summary>
@@ -97,9 +100,17 @@ public sealed class BasketsController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<BasketResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAllBaskets()
     {
-        var snapshots = await _basketService.GetAllBasketsAsync();
-        var response = snapshots.Select(Map).ToList();
-        return Ok(response);
+        try
+        {
+            var snapshots = await _basketService.GetAllBasketsAsync();
+            var response = snapshots.Select(Map).ToList();
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unable to return all baskets.");
+            throw;
+        }
     }
 
     private static BasketResponse Map(BasketSnapshot basketSnapshot)
