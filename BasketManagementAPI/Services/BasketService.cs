@@ -78,7 +78,7 @@ public sealed class BasketService : IBasketService
     public async Task<Totals> AddShippingAsync(Guid basketId, string country)
     {
         var basket = await _repository.GetAsync(basketId);
-        var shipping = _shippingPolicy.Resolve(country);
+        var shipping = await _shippingPolicy.ResolveAsync(country);
         basket.SetShipping(shipping);
         await _repository.SaveAsync(basket);
         return await BuildTotalsAsync(basket);

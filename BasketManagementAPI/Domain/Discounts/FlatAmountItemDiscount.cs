@@ -2,7 +2,7 @@ using System;
 
 namespace BasketManagementAPI.Domain.Discounts;
 
-public sealed class FlatAmountItemDiscount : IBasketItemDiscount
+public sealed class FlatAmountItemDiscount : IBasketItemDiscount, IEquatable<FlatAmountItemDiscount>
 {
     public string Description => $"Flat amount off {AmountTaken}p";
 
@@ -23,6 +23,20 @@ public sealed class FlatAmountItemDiscount : IBasketItemDiscount
         var discountedUnitPrice = Math.Max(unitPrice - AmountTaken, 0);
         return discountedUnitPrice * quantity;
     }
+
+    public bool Equals(FlatAmountItemDiscount? other)
+    {
+        if (other is null)
+        {
+            return false;
+        }
+
+        return AmountTaken == other.AmountTaken;
+    }
+
+    public override bool Equals(object? obj) => Equals(obj as FlatAmountItemDiscount);
+
+    public override int GetHashCode() => AmountTaken.GetHashCode();
 }
 
 

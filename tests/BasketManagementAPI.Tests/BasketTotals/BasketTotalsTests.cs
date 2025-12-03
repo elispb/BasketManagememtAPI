@@ -29,7 +29,8 @@ public class BasketTotalsTests
         _discountDefinitionRepositoryMock
             .Setup(r => r.UpsertAsync(It.IsAny<string>(), It.IsAny<decimal>()))
             .ReturnsAsync(Guid.NewGuid());
-        _shippingPolicyMock.Setup(p => p.Resolve(It.IsAny<string>())).Returns(new ShippingDetails("UK", 0));
+        _shippingPolicyMock.Setup(p => p.ResolveAsync(It.IsAny<string>()))
+            .ReturnsAsync(new ShippingDetails("UK", 0));
     }
 
     [Fact]
