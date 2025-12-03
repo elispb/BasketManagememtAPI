@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
+using Microsoft.Data.SqlClient;
 using Xunit;
 
 namespace BasketManagementAPI.Tests.Infrastructure;
@@ -25,6 +26,9 @@ public sealed class SqlServerDockerFixture : IAsyncLifetime
         ?? Environment.GetEnvironmentVariable("CONFIGURATION")
         ?? "Debug";
 
+    private const string DefaultConnectionString =
+        "Server=localhost,1433;Database=BasketDb;User Id=sa;Password=Str0ng!Passw0rd;TrustServerCertificate=True;";
+
     public async Task InitializeAsync()
     {
         await RunCommandAsync("docker", $"compose -f \"{ComposeFile}\" up --wait -d sqlserver");
@@ -32,12 +36,15 @@ public sealed class SqlServerDockerFixture : IAsyncLifetime
             "docker",
             "exec basketmanagementapi-tests-db /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Str0ng!Passw0rd -C -Q \"IF DB_ID(N'BasketDb') IS NULL CREATE DATABASE BasketDb;\"");
         await RunCommandAsync("dotnet", $"run --project \"{DatabaseProject}\" --configuration {Configuration}");
+        await SeedTestDataAsync(DefaultConnectionString);
     }
 
     public async Task DisposeAsync()
     {
         await RunCommandAsync("docker", $"compose -f \"{ComposeFile}\" down");
     }
+
+    public string ConnectionString => DefaultConnectionString;
 
     private static string LocateRepositoryRoot()
     {
@@ -79,5 +86,44 @@ public sealed class SqlServerDockerFixture : IAsyncLifetime
             throw new InvalidOperationException(
                 $"Command '{fileName} {arguments}' failed with exit code {process.ExitCode}. StdOut: {output}. StdErr: {error}");
         }
+    }
+
+    private static async Task SeedTestDataAsync(string connectionString)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            IF OBJECT_ID('dbo.DiscountDefinitions', 'U') IS NOT NULL
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM dbo.DiscountDefinitions WHERE Code = 'TEST10')
+                BEGIN
+                    INSERT INTO dbo.DiscountDefinitions (Id, Code, Percentage, Metadata, IsActive, CreatedAt, ModifiedAt)
+                    VALUES (NEWID(), 'TEST10', 10, '{"source":"tests","description":"Integration test discount"}', 1, SYSUTCDATETIME(), SYSUTCDATETIME());
+                END
+
+                IF NOT EXISTS (SELECT 1 FROM dbo.DiscountDefinitions WHERE Code = 'TEST20')
+                BEGIN
+                    INSERT INTO dbo.DiscountDefinitions (Id, Code, Percentage, Metadata, IsActive, CreatedAt, ModifiedAt)
+                    VALUES (NEWID(), 'TEST20', 20, '{"source":"tests","description":"Integration promo"}', 1, SYSUTCDATETIME(), SYSUTCDATETIME());
+                END
+            END
+
+            IF OBJECT_ID('dbo.ShippingCosts', 'U') IS NOT NULL
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM dbo.ShippingCosts WHERE Country = 'Testland')
+                BEGIN
+                    INSERT INTO dbo.ShippingCosts (Id, Country, Cost, CreatedAt, ModifiedAt)
+                    VALUES (NEWID(), 'Testland', 1500, SYSUTCDATETIME(), SYSUTCDATETIME());
+                END
+
+                IF NOT EXISTS (SELECT 1 FROM dbo.ShippingCosts WHERE Country = 'Sandbox Country')
+                BEGIN
+                    INSERT INTO dbo.ShippingCosts (Id, Country, Cost, CreatedAt, ModifiedAt)
+                    VALUES (NEWID(), 'Sandbox Country', 2500, SYSUTCDATETIME(), SYSUTCDATETIME());
+                END
+            END
+            """;
+        await command.ExecuteNonQueryAsync();
     }
 }
