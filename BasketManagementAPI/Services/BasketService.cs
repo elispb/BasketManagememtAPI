@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using BasketManagementAPI.Domain.Baskets;
 using BasketManagementAPI.Domain.Discounts;
+using BasketManagementAPI.Domain.Shipping;
 using BasketManagementAPI.Repositories;
-using BasketManagementAPI.Shipping;
 
 namespace BasketManagementAPI.Services;
 

@@ -1,9 +1,9 @@
 using System;
 using BasketManagementAPI.Domain.Baskets;
 using BasketManagementAPI.Domain.Discounts;
+using BasketManagementAPI.Domain.Shipping;
 using BasketManagementAPI.Repositories;
 using BasketManagementAPI.Services;
-using BasketManagementAPI.Shipping;
 using FluentAssertions;
 using Moq;
 

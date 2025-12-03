@@ -2,7 +2,6 @@ using BasketManagementAPI.Filters;
 using BasketManagementAPI.Domain.Discounts;
 using BasketManagementAPI.Repositories;
 using BasketManagementAPI.Services;
-using BasketManagementAPI.Shipping;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using BasketManagementAPI.Validators;
@@ -10,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.IO;
 using System.Reflection;
 using System.Text.Json.Serialization;
+using BasketManagementAPI.Domain.Shipping;
 
 var builder = WebApplication.CreateBuilder(args);
 
