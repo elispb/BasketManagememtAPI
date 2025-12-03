@@ -71,7 +71,6 @@ public sealed class SqlDiscountDefinitionRepository : IDiscountDefinitionReposit
         var existing = await GetByCodeAsync(code);
         if (existing is not null)
         {
-            await UpdateDefinitionAsync(existing.Id, code, percentage);
             return existing.Id;
         }
 
@@ -95,21 +94,6 @@ public sealed class SqlDiscountDefinitionRepository : IDiscountDefinitionReposit
         await using var connection = await CreateOpenConnectionAsync();
         await using var command = connection.CreateCommand();
         command.CommandText = "usp_InsertDiscountDefinition";
-        command.CommandType = CommandType.StoredProcedure;
-        command.Parameters.AddWithValue("@Id", id);
-        command.Parameters.AddWithValue("@Code", code);
-        command.Parameters.AddWithValue("@Percentage", percentage);
-        command.Parameters.AddWithValue("@Metadata", DBNull.Value);
-        command.Parameters.AddWithValue("@IsActive", true);
-
-        await command.ExecuteNonQueryAsync();
-    }
-
-    private async Task UpdateDefinitionAsync(Guid id, string code, decimal percentage)
-    {
-        await using var connection = await CreateOpenConnectionAsync();
-        await using var command = connection.CreateCommand();
-        command.CommandText = "usp_UpdateDiscountDefinition";
         command.CommandType = CommandType.StoredProcedure;
         command.Parameters.AddWithValue("@Id", id);
         command.Parameters.AddWithValue("@Code", code);

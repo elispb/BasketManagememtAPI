@@ -21,6 +21,20 @@ public sealed class DiscountCatalog : IDiscountCatalog
 
     public async Task<DiscountDefinition> EnsureDefinitionAsync(string code, decimal percentage)
     {
+        var existing = await _repository.GetByCodeAsync(code);
+        if (existing is not null)
+        {
+            EnsureActiveDefinition(existing);
+
+            var storedPercentage = existing.Percentage!.Value;
+            if (storedPercentage != percentage)
+            {
+                throw new InvalidOperationException($"Discount definition '{code}' already exists with percentage '{storedPercentage}'.");
+            }
+
+            return existing;
+        }
+
         var id = await _repository.UpsertAsync(code, percentage);
         var definition = await _repository.GetByIdAsync(id);
 
@@ -29,10 +43,7 @@ public sealed class DiscountCatalog : IDiscountCatalog
             throw new InvalidOperationException($"Discount definition '{code}' could not be resolved.");
         }
 
-        if (!definition.IsActive || definition.Percentage is null || definition.Percentage <= 0)
-        {
-            throw new InvalidOperationException($"Discount definition '{code}' is not active or invalid.");
-        }
+        EnsureActiveDefinition(definition);
 
         return definition;
     }
@@ -51,6 +62,14 @@ public sealed class DiscountCatalog : IDiscountCatalog
         }
 
         return definition;
+    }
+
+    private static void EnsureActiveDefinition(DiscountDefinition definition)
+    {
+        if (!definition.IsActive || definition.Percentage is null || definition.Percentage <= 0)
+        {
+            throw new InvalidOperationException($"Discount definition '{definition.Code}' is not active or invalid.");
+        }
     }
 }
 

@@ -14,6 +14,7 @@ public sealed class DiscountCatalogTests
         var id = Guid.NewGuid();
         var definition = new DiscountDefinition(id, "SAVE", 20m, null, true);
         var repository = new Mock<IDiscountDefinitionRepository>();
+        repository.Setup(r => r.GetByCodeAsync("SAVE")).ReturnsAsync((DiscountDefinition?)null);
         repository.Setup(r => r.UpsertAsync("SAVE", 20m)).ReturnsAsync(id);
         repository.Setup(r => r.GetByIdAsync(id)).ReturnsAsync(definition);
 
@@ -29,6 +30,7 @@ public sealed class DiscountCatalogTests
     {
         var id = Guid.NewGuid();
         var repository = new Mock<IDiscountDefinitionRepository>();
+        repository.Setup(r => r.GetByCodeAsync("SAVE")).ReturnsAsync((DiscountDefinition?)null);
         repository.Setup(r => r.UpsertAsync("SAVE", 20m)).ReturnsAsync(id);
         repository.Setup(r => r.GetByIdAsync(id)).ReturnsAsync(new DiscountDefinition(id, "SAVE", 20m, null, false));
 
@@ -50,5 +52,37 @@ public sealed class DiscountCatalogTests
         result.Should().BeNull();
     }
 
+    [Fact]
+    public async Task EnsureDefinitionAsync_UsesStoredDefinitionWhenAvailable()
+    {
+        var id = Guid.NewGuid();
+        var definition = new DiscountDefinition(id, "SAVE", 20m, null, true);
+        var repository = new Mock<IDiscountDefinitionRepository>();
+        repository.Setup(r => r.GetByCodeAsync("SAVE")).ReturnsAsync(definition);
+
+        var catalog = new DiscountCatalog(repository.Object);
+
+        var result = await catalog.EnsureDefinitionAsync("SAVE", 20m);
+
+        result.Should().Be(definition);
+        repository.Verify(r => r.UpsertAsync(It.IsAny<string>(), It.IsAny<decimal>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task EnsureDefinitionAsync_ThrowsWhenStoredPercentageDiffers()
+    {
+        var id = Guid.NewGuid();
+        var definition = new DiscountDefinition(id, "SAVE", 20m, null, true);
+        var repository = new Mock<IDiscountDefinitionRepository>();
+        repository.Setup(r => r.GetByCodeAsync("SAVE")).ReturnsAsync(definition);
+
+        var catalog = new DiscountCatalog(repository.Object);
+
+        await FluentActions.Awaiting(() => catalog.EnsureDefinitionAsync("SAVE", 50m))
+            .Should()
+            .ThrowAsync<InvalidOperationException>();
+
+        repository.Verify(r => r.UpsertAsync(It.IsAny<string>(), It.IsAny<decimal>()), Times.Never);
+    }
 }
 
