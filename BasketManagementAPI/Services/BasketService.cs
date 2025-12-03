@@ -56,17 +56,13 @@ public sealed class BasketService : IBasketService
         return basket;
     }
 
-    public async Task<Basket> RemoveItemAsync(Guid basketId, string productId)
+    public async Task RemoveItemAsync(Guid basketId, string productId)
     {
-        var basket = await _repository.GetAsync(basketId);
-
-        if (!basket.RemoveItem(productId))
+        var deleted = await _repository.DeleteItemAsync(basketId, productId);
+        if (!deleted)
         {
-            throw new KeyNotFoundException($"Item '{productId}' not found in basket.");
+            throw new KeyNotFoundException($"Item '{productId}' not found in basket '{basketId}'.");
         }
-
-        await _repository.SaveAsync(basket);
-        return basket;
     }
 
     public async Task<Basket> ApplyDiscountCodeAsync(Guid basketId, string code, decimal percentage)
@@ -96,14 +92,6 @@ public sealed class BasketService : IBasketService
 
     public async Task<Item> ApplyItemDiscountAsync(Guid basketId, string productId, ItemDiscountDefinition discount)
     {
-        var basket = await _repository.GetAsync(basketId);
-        var item = basket.Items.FirstOrDefault(i => string.Equals(i.ProductId, productId, StringComparison.OrdinalIgnoreCase));
-
-        if (item is null)
-        {
-            throw new KeyNotFoundException($"Item '{productId}' was not found in basket '{basketId}'.");
-        }
-
         var discountEngine = CreateItemDiscount(discount);
 
         if (discountEngine is null)
@@ -111,8 +99,20 @@ public sealed class BasketService : IBasketService
             throw new InvalidOperationException("Unable to resolve item discount.");
         }
 
-        item.ApplyDiscount(discountEngine);
-        await _repository.SaveAsync(basket);
+        var (type, amount) = GetItemDiscountData(discountEngine);
+        var updated = await _repository.UpdateItemDiscountAsync(basketId, productId, type, amount);
+
+        if (!updated)
+        {
+            throw new KeyNotFoundException($"Item '{productId}' was not found in basket '{basketId}'.");
+        }
+
+        var item = await _repository.GetItemAsync(basketId, productId);
+        if (item is null)
+        {
+            throw new KeyNotFoundException($"Item '{productId}' was not found in basket '{basketId}'.");
+        }
+
         return item;
     }
 
@@ -135,6 +135,17 @@ public sealed class BasketService : IBasketService
             ItemDiscountType.FlatAmount => new FlatAmountItemDiscount(definition.Amount),
             ItemDiscountType.Bogo => new BuyOneGetOneFreeItemDiscount(),
             _ => throw new NotSupportedException($"Item discount type '{definition.Type}' is not supported.")
+        };
+    }
+
+    private static (byte? Type, int? Amount) GetItemDiscountData(IBasketItemDiscount? discount)
+    {
+        return discount switch
+        {
+            FlatAmountItemDiscount flat => ((byte)ItemDiscountType.FlatAmount, flat.AmountTaken),
+            BuyOneGetOneFreeItemDiscount => ((byte)ItemDiscountType.Bogo, 0),
+            null => (null, null),
+            _ => throw new NotSupportedException("Unsupported item discount type.")
         };
     }
 

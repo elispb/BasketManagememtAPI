@@ -9,4 +9,10 @@ public interface IBasketRepository
     Task CreateAsync(Basket basket);
 
     Task SaveAsync(Basket basket);
+
+    Task<bool> DeleteItemAsync(Guid basketId, string productId);
+
+    Task<bool> UpdateItemDiscountAsync(Guid basketId, string productId, byte? itemDiscountType, int? itemDiscountAmount);
+
+    Task<Item?> GetItemAsync(Guid basketId, string productId);
 }

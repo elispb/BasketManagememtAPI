@@ -9,7 +9,7 @@ public interface IBasketService
 
     Task<Basket> AddItemsAsync(Guid basketId, IEnumerable<ItemDefinition> items);
 
-    Task<Basket> RemoveItemAsync(Guid basketId, string productId);
+    Task RemoveItemAsync(Guid basketId, string productId);
 
     Task<Basket> ApplyDiscountCodeAsync(Guid basketId, string code, decimal percentage);
 
