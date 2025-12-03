@@ -88,6 +88,16 @@ public sealed class ItemsControllerIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task RemovingMissingItem_ReturnsNoContent()
+    {
+        var client = _factory.CreateClient();
+        var basketId = await CreateBasketAsync(client);
+
+        var deleteResponse = await client.DeleteAsync($"/api/baskets/{basketId}/items/999");
+        deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
     public async Task AddItems_ReturnsBadRequest_WhenItemsCollectionIsEmpty()
     {
         var client = _factory.CreateClient();

@@ -66,11 +66,7 @@ public sealed class BasketService : IBasketService
 
     public async Task RemoveItemAsync(Guid basketId, int productId)
     {
-        var deleted = await _repository.DeleteItemAsync(basketId, productId);
-        if (!deleted)
-        {
-            throw new KeyNotFoundException($"Item '{productId}' not found in basket '{basketId}'.");
-        }
+        await _repository.DeleteItemAsync(basketId, productId);
     }
 
     public async Task<Basket> ApplyDiscountCodeAsync(Guid basketId, string code, decimal percentage)
