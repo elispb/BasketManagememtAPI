@@ -27,7 +27,7 @@ builder.Services.AddSingleton<IBasketRepository, SqlBasketRepository>();
 builder.Services.AddSingleton<IDiscountDefinitionRepository, SqlDiscountDefinitionRepository>();
 builder.Services.AddSingleton<IShippingCostRepository, SqlShippingCostRepository>();
 builder.Services.AddSingleton<IShippingPolicy, ShippingPolicy>();
-builder.Services.AddSingleton<IDiscountDefinitionService, DiscountDefinitionService>();
+builder.Services.AddSingleton<IDiscountCatalog, DiscountCatalog>();
 builder.Services.AddSingleton<ITotalsCalculator, TotalsCalculator>();
 builder.Services.AddScoped<IBasketService, BasketService>();
 

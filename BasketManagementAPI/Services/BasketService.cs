@@ -10,18 +10,18 @@ public sealed class BasketService : IBasketService
     private readonly IBasketRepository _repository;
     private readonly IShippingPolicy _shippingPolicy;
     private readonly ITotalsCalculator _totalsCalculator;
-    private readonly IDiscountDefinitionService _discountDefinitionService;
+    private readonly IDiscountCatalog _discountCatalog;
 
     public BasketService(
         IBasketRepository repository,
         IShippingPolicy shippingPolicy,
         ITotalsCalculator totalsCalculator,
-        IDiscountDefinitionService discountDefinitionService)
+        IDiscountCatalog discountCatalog)
     {
         _repository = repository;
         _shippingPolicy = shippingPolicy;
         _totalsCalculator = totalsCalculator;
-        _discountDefinitionService = discountDefinitionService;
+        _discountCatalog = discountCatalog;
     }
 
     public async Task<Basket> CreateBasketAsync()
@@ -69,9 +69,9 @@ public sealed class BasketService : IBasketService
     public async Task<Basket> ApplyDiscountCodeAsync(Guid basketId, string code, decimal percentage)
     {
         var basket = await _repository.GetAsync(basketId);
-        var discount = new PercentageBasketDiscount(code, percentage);
-        var discountDefinitionId = await _discountDefinitionService.EnsureDefinitionAsync(code, percentage);
-        basket.ApplyDiscount(discount, discountDefinitionId);
+        var definition = await _discountCatalog.EnsureDefinitionAsync(code, percentage);
+        var discount = new PercentageBasketDiscount(definition.Code, definition.Percentage!.Value);
+        basket.ApplyDiscount(discount, definition.Id);
         await _repository.SaveAsync(basket);
         return basket;
     }

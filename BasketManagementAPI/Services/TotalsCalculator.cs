@@ -12,12 +12,11 @@ public sealed class TotalsCalculator : ITotalsCalculator
 {
     private const decimal VatRate = 0.20m;
 
-    private readonly IDiscountDefinitionService _discountDefinitionService;
+    private readonly IDiscountCatalog _discountCatalog;
 
-    public TotalsCalculator(IDiscountDefinitionService discountDefinitionService)
+    public TotalsCalculator(IDiscountCatalog discountCatalog)
     {
-        _discountDefinitionService = discountDefinitionService
-            ?? throw new ArgumentNullException(nameof(discountDefinitionService));
+        _discountCatalog = discountCatalog ?? throw new ArgumentNullException(nameof(discountCatalog));
     }
 
     public async Task<Totals> CalculateAsync(Basket basket)
@@ -26,7 +25,7 @@ public sealed class TotalsCalculator : ITotalsCalculator
 
         var subtotal = basket.Items.Sum(item => item.Total());
         var eligibleAmount = basket.Items.Where(item => !item.HasItemDiscount).Sum(item => item.Total());
-        var discount = await _discountDefinitionService.CalculateDiscountAsync(basket.DiscountDefinitionId, eligibleAmount);
+        var discount = await CalculateBasketDiscountAsync(basket.DiscountDefinitionId, eligibleAmount);
         var shipping = basket.ShippingDetails?.Cost ?? 0;
         var totalWithoutVat = Math.Max(subtotal - discount + shipping, 0);
         var vatBase = Math.Max(subtotal - discount, 0);
@@ -34,6 +33,19 @@ public sealed class TotalsCalculator : ITotalsCalculator
         var totalWithVat = totalWithoutVat + vatAmount;
 
         return new Totals(subtotal, discount, shipping, totalWithoutVat, vatAmount, totalWithVat);
+    }
+
+    private async Task<int> CalculateBasketDiscountAsync(Guid? definitionId, int eligibleAmount)
+    {
+        var definition = await _discountCatalog.GetActiveDefinitionAsync(definitionId);
+        if (definition is null)
+        {
+            return 0;
+        }
+
+        var discountEngine = new PercentageBasketDiscount(definition.Code, definition.Percentage!.Value);
+        var calculated = discountEngine.CalculateDiscount(eligibleAmount);
+        return Math.Min(calculated, eligibleAmount);
     }
 }
 

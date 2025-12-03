@@ -34,7 +34,7 @@ public sealed class SqlServerDockerFixture : IAsyncLifetime
         await RunCommandAsync("docker", $"compose -f \"{ComposeFile}\" up --wait -d sqlserver");
         await RunCommandAsync(
             "docker",
-            "exec basketmanagementapi-tests-db /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Str0ng!Passw0rd -C -Q \"IF DB_ID(N'BasketDb') IS NULL CREATE DATABASE BasketDb;\"");
+            "exec basketmanagementapi-tests-db-integration /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Str0ng!Passw0rd -C -Q \"IF DB_ID(N'BasketDb') IS NULL CREATE DATABASE BasketDb;\"");
         await RunCommandAsync("dotnet", $"run --project \"{DatabaseProject}\" --configuration {Configuration}");
         await SeedTestDataAsync(DefaultConnectionString);
     }
