@@ -24,6 +24,9 @@ public class BasketTotalsTests
         _shippingPolicyMock = new Mock<IShippingPolicy>();
         _discountDefinitionRepositoryMock = new Mock<IDiscountDefinitionRepository>();
         _discountDefinitionRepositoryMock
+            .Setup(r => r.GetByIdAsync(It.IsAny<Guid>()))
+            .ReturnsAsync((DiscountDefinition?)null);
+        _discountDefinitionRepositoryMock
             .Setup(r => r.UpsertAsync(It.IsAny<string>(), It.IsAny<decimal>()))
             .ReturnsAsync(Guid.NewGuid());
         _shippingPolicyMock.Setup(p => p.Resolve(It.IsAny<string>())).Returns(new ShippingDetails("UK", 0));
@@ -32,11 +35,15 @@ public class BasketTotalsTests
     [Fact]
     public async Task GetTotalsAsync_IncludesSubtotalDiscountShippingVat()
     {
+        var discountDefinitionId = Guid.NewGuid();
         var basket = new Basket();
         basket.AddOrUpdateItem(new Item("A1", "Item without discount", 500, 1, null));
         basket.AddOrUpdateItem(new Item("D1", "Discounted item", 200, 1, new FlatAmountItemDiscount(50)));
         basket.SetShipping(new ShippingDetails("UK", 20));
-        basket.ApplyDiscount(new PercentageBasketDiscount("VACAY", 10));
+        basket.ApplyDiscount(new PercentageBasketDiscount("VACAY", 10), discountDefinitionId);
+        _discountDefinitionRepositoryMock
+            .Setup(r => r.GetByIdAsync(discountDefinitionId))
+            .ReturnsAsync(new DiscountDefinition(discountDefinitionId, "VACAY", 10, null, true));
 
         var service = CreateServiceWithBasket(basket);
 
@@ -57,10 +64,14 @@ public class BasketTotalsTests
     [Fact]
     public async Task GetTotalsAsync_TotalWithoutVat_FloorsAtZero()
     {
+        var discountDefinitionId = Guid.NewGuid();
         var basket = new Basket();
         basket.AddOrUpdateItem(new Item("E1", "Expensive item", 100, 1, null));
-        basket.ApplyDiscount(new PercentageBasketDiscount("FREE", 100));
+        basket.ApplyDiscount(new PercentageBasketDiscount("FREE", 100), discountDefinitionId);
         basket.SetShipping(new ShippingDetails("UK", 20));
+        _discountDefinitionRepositoryMock
+            .Setup(r => r.GetByIdAsync(discountDefinitionId))
+            .ReturnsAsync(new DiscountDefinition(discountDefinitionId, "FREE", 100, null, true));
 
         var service = CreateServiceWithBasket(basket);
 
@@ -74,10 +85,14 @@ public class BasketTotalsTests
     [Fact]
     public async Task GetTotalsAsync_HandlesVeryLargeAmounts()
     {
+        var discountDefinitionId = Guid.NewGuid();
         var basket = new Basket();
         basket.AddOrUpdateItem(new Item("L1", "Large item #1", 900_000_000, 2, null));
-        basket.ApplyDiscount(new PercentageBasketDiscount("BULK", 10));
+        basket.ApplyDiscount(new PercentageBasketDiscount("BULK", 10), discountDefinitionId);
         basket.SetShipping(new ShippingDetails("UK", 0));
+        _discountDefinitionRepositoryMock
+            .Setup(r => r.GetByIdAsync(discountDefinitionId))
+            .ReturnsAsync(new DiscountDefinition(discountDefinitionId, "BULK", 10, null, true));
 
         var service = CreateServiceWithBasket(basket);
 
@@ -95,4 +110,5 @@ public class BasketTotalsTests
         _repositoryMock.Setup(r => r.GetAsync(It.IsAny<Guid>())).ReturnsAsync(basket);
         return new BasketService(_repositoryMock.Object, _shippingPolicyMock.Object, _discountDefinitionRepositoryMock.Object);
     }
+
 }

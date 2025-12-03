@@ -41,6 +41,31 @@ public sealed class SqlDiscountDefinitionRepository : IDiscountDefinitionReposit
         return ReadDefinition(reader);
     }
 
+    public async Task<DiscountDefinition?> GetByIdAsync(Guid id)
+    {
+        await using var connection = await CreateOpenConnectionAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT
+                [Id],
+                [Code],
+                [Percentage],
+                [Metadata],
+                [IsActive]
+            FROM [dbo].[DiscountDefinitions]
+            WHERE [Id] = @Id;
+            """;
+        command.Parameters.AddWithValue("@Id", id);
+
+        await using var reader = await command.ExecuteReaderAsync();
+        if (!await reader.ReadAsync())
+        {
+            return null;
+        }
+
+        return ReadDefinition(reader);
+    }
+
     public async Task<Guid> UpsertAsync(string code, decimal percentage)
     {
         var existing = await GetByCodeAsync(code);

@@ -85,13 +85,13 @@ public sealed class BasketService : IBasketService
         var shipping = _shippingPolicy.Resolve(country);
         basket.SetShipping(shipping);
         await _repository.SaveAsync(basket);
-        return BuildTotals(basket);
+        return await BuildTotalsAsync(basket);
     }
 
     public async Task<Totals> GetTotalsAsync(Guid basketId)
     {
         var basket = await _repository.GetAsync(basketId);
-        return BuildTotals(basket);
+        return await BuildTotalsAsync(basket);
     }
 
     public async Task<Item> ApplyItemDiscountAsync(Guid basketId, string productId, ItemDiscountDefinition discount)
@@ -119,7 +119,8 @@ public sealed class BasketService : IBasketService
     public async Task<BasketSnapshot> GetBasketAsync(Guid basketId)
     {
         var basket = await _repository.GetAsync(basketId);
-        return new BasketSnapshot(basket, BuildTotals(basket));
+        var totals = await BuildTotalsAsync(basket);
+        return new BasketSnapshot(basket, totals);
     }
 
     private static IBasketItemDiscount? CreateItemDiscount(ItemDiscountDefinition? definition)
@@ -137,11 +138,11 @@ public sealed class BasketService : IBasketService
         };
     }
 
-    private static Totals BuildTotals(Basket basket)
+    private async Task<Totals> BuildTotalsAsync(Basket basket)
     {
         var subtotal = basket.Items.Sum(item => item.Total());
         var eligibleAmount = basket.Items.Where(item => !item.HasItemDiscount).Sum(item => item.Total());
-        var discount = basket.BasketDiscount?.CalculateDiscount(eligibleAmount) ?? 0;
+        var discount = await CalculateBasketDiscountAsync(basket, eligibleAmount);
         var shipping = basket.ShippingDetails?.Cost ?? 0;
         var totalWithoutVat = Math.Max(subtotal - discount + shipping, 0);
         var vatBase = Math.Max(subtotal - discount, 0);
@@ -149,5 +150,23 @@ public sealed class BasketService : IBasketService
         var totalWithVat = totalWithoutVat + vatAmount;
 
         return new Totals(subtotal, discount, shipping, totalWithoutVat, vatAmount, totalWithVat);
+    }
+
+    private async Task<int> CalculateBasketDiscountAsync(Basket basket, int eligibleAmount)
+    {
+        if (!basket.DiscountDefinitionId.HasValue)
+        {
+            return 0;
+        }
+
+        var definition = await _discountDefinitionRepository.GetByIdAsync(basket.DiscountDefinitionId.Value);
+        if (definition is null || !definition.IsActive || definition.Percentage is null || definition.Percentage <= 0)
+        {
+            return 0;
+        }
+
+        var discountEngine = new PercentageBasketDiscount(definition.Code, definition.Percentage.Value);
+        var calculated = discountEngine.CalculateDiscount(eligibleAmount);
+        return Math.Min(calculated, eligibleAmount);
     }
 }
