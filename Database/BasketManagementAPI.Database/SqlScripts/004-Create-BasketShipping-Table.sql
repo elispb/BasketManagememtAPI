@@ -7,7 +7,7 @@ IF OBJECT_ID('dbo.BasketShipping', 'U') IS NULL
 BEGIN
     CREATE TABLE dbo.BasketShipping (
         BasketId UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
-        Country NVARCHAR(200) NOT NULL,
+        CountryCode NVARCHAR(10) NOT NULL,
         Cost INT NOT NULL,
         CreatedAt DATETIME2 NOT NULL,
         ModifiedAt DATETIME2 NOT NULL,

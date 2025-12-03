@@ -4,7 +4,7 @@ namespace BasketManagementAPI.Shipping;
 
 public interface IShippingPolicy
 {
-    Task<ShippingDetails> ResolveAsync(string country);
+    Task<ShippingDetails> ResolveAsync(string countryCode);
 }
 
 

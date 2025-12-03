@@ -1,3 +1,4 @@
+using BasketManagementAPI.Domain.Shipping;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 
@@ -13,11 +14,9 @@ public sealed class SqlShippingCostRepository : IShippingCostRepository
             ?? throw new InvalidOperationException("A connection string named 'DefaultConnection' was not found.");
     }
 
-    public async Task<int?> GetCostAsync(string country)
+    public async Task<int?> GetCostAsync(CountryCode countryCode)
     {
-        var normalized = (country ?? string.Empty).Trim();
-
-        if (string.IsNullOrWhiteSpace(normalized))
+        if (countryCode == CountryCode.Unknown)
         {
             return null;
         }
@@ -27,9 +26,9 @@ public sealed class SqlShippingCostRepository : IShippingCostRepository
         command.CommandText = """
             SELECT TOP (1) [Cost]
             FROM [dbo].[ShippingCosts]
-            WHERE UPPER([Country]) = @Country;
+            WHERE [CountryCode] = @CountryCode;
             """;
-        command.Parameters.AddWithValue("@Country", normalized.ToUpperInvariant());
+        command.Parameters.AddWithValue("@CountryCode", (int)countryCode);
 
         var result = await command.ExecuteScalarAsync();
         return result is int cost ? cost : null;

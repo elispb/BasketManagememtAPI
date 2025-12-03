@@ -14,13 +14,18 @@ public sealed class ShippingPolicy : IShippingPolicy
         _shippingCostRepository = shippingCostRepository;
     }
 
-    public async Task<ShippingDetails> ResolveAsync(string country)
+    public async Task<ShippingDetails> ResolveAsync(string countryCode)
     {
-        var normalized = (country ?? string.Empty).Trim();
-        var resolvedCountry = string.IsNullOrWhiteSpace(normalized) ? "Unknown" : normalized;
-        var cost = await _shippingCostRepository.GetCostAsync(normalized);
+        if (!CountryCodeParser.TryParse(countryCode, out var resolvedCode))
+        {
+            resolvedCode = CountryCode.Unknown;
+        }
 
-        return new ShippingDetails(resolvedCountry, cost ?? DefaultShippingCost);
+        var cost = resolvedCode == CountryCode.Unknown
+            ? null
+            : await _shippingCostRepository.GetCostAsync(resolvedCode);
+
+        return new ShippingDetails(resolvedCode, cost ?? DefaultShippingCost);
     }
 }
 

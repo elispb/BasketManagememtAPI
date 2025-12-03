@@ -7,8 +7,8 @@ public sealed class AddShippingRequestValidator : AbstractValidator<AddShippingR
 {
     public AddShippingRequestValidator()
     {
-        RuleFor(request => request.Country)
+        RuleFor(request => request.CountryCode)
             .NotEmpty()
-            .WithMessage("Country is required for shipping.");
+            .WithMessage("Country code is required for shipping.");
     }
 }

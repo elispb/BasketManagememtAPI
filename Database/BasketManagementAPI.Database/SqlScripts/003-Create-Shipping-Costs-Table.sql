@@ -8,10 +8,12 @@ BEGIN
     CREATE TABLE dbo.ShippingCosts (
         Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
         Country NVARCHAR(200) NOT NULL,
+        CountryCode INT NOT NULL,
         Cost INT NOT NULL,
         CreatedAt DATETIME2 NOT NULL,
         ModifiedAt DATETIME2 NOT NULL,
-        CONSTRAINT UQ_ShippingCosts_Country UNIQUE (Country)
+        CONSTRAINT UQ_ShippingCosts_Country UNIQUE (Country),
+        CONSTRAINT UQ_ShippingCosts_CountryCode UNIQUE (CountryCode)
     );
 END
 

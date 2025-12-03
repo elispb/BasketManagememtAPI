@@ -30,7 +30,7 @@ public class BasketTotalsTests
         var basket = new Basket();
         basket.AddOrUpdateItem(Item.Create("Item without discount", 500, 1, null));
         basket.AddOrUpdateItem(Item.Create("Discounted item", 200, 1, new FlatAmountItemDiscount(50)));
-        basket.SetShipping(new ShippingDetails("UK", 20));
+        basket.SetShipping(new ShippingDetails(CountryCode.UnitedKingdom, 20));
         basket.ApplyDiscount(new PercentageBasketDiscount("VACAY", 10), discountDefinitionId);
         _discountCatalogMock
             .Setup(c => c.GetActiveDefinitionAsync(discountDefinitionId))
@@ -53,7 +53,7 @@ public class BasketTotalsTests
         var basket = new Basket();
         basket.AddOrUpdateItem(Item.Create("Expensive item", 100, 1, null));
         basket.ApplyDiscount(new PercentageBasketDiscount("FREE", 100), discountDefinitionId);
-        basket.SetShipping(new ShippingDetails("UK", 20));
+        basket.SetShipping(new ShippingDetails(CountryCode.UnitedKingdom, 20));
         _discountCatalogMock
             .Setup(c => c.GetActiveDefinitionAsync(discountDefinitionId))
             .ReturnsAsync(new DiscountDefinition(discountDefinitionId, "FREE", 100, null, true));
@@ -72,7 +72,7 @@ public class BasketTotalsTests
         var basket = new Basket();
         basket.AddOrUpdateItem(Item.Create("Large item #1", 900_000_000, 2, null));
         basket.ApplyDiscount(new PercentageBasketDiscount("BULK", 10), discountDefinitionId);
-        basket.SetShipping(new ShippingDetails("UK", 0));
+        basket.SetShipping(new ShippingDetails(CountryCode.UnitedKingdom, 0));
         _discountCatalogMock
             .Setup(c => c.GetActiveDefinitionAsync(discountDefinitionId))
             .ReturnsAsync(new DiscountDefinition(discountDefinitionId, "BULK", 10, null, true));

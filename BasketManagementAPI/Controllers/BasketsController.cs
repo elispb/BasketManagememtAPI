@@ -63,15 +63,16 @@ public sealed class BasketsController : ControllerBase
     /// </summary>
     /// <param name="basketId">Identifier of the basket to update.</param>
     /// <param name="request">
-    ///     Request payload containing destination country information. The provided country name is required, is trimmed,
-    ///     and is used to look up the shipping rate before returning updated totals.
+    ///     Request payload containing the destination country code. The provided code is required, trimmed, normalized,
+    ///     and used to look up the shipping rate before returning updated totals. Both enum names (`UnitedKingdom`, `uk`)
+    ///     and integer values (`1`) from the `CountryCode` enum are accepted.
     /// </param>
     /// <returns>The updated basket totals after shipping is applied.</returns>
     [HttpPatch("{basketId:guid}/shipping")]
     [ProducesResponseType(typeof(PriceResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> AddShipping(Guid basketId, AddShippingRequest request)
     {
-        var totals = await _basketService.AddShippingAsync(basketId, request.Country);
+        var totals = await _basketService.AddShippingAsync(basketId, request.CountryCode);
         return Ok(MapPrice(totals));
     }
 
@@ -109,7 +110,7 @@ public sealed class BasketsController : ControllerBase
             basketSnapshot.Basket.ShippingDetails is null
                 ? null
                 : new ShippingDetailsResponse(
-                    basketSnapshot.Basket.ShippingDetails.Country,
+                    basketSnapshot.Basket.ShippingDetails.CountryCode.ToString(),
                     basketSnapshot.Basket.ShippingDetails.Cost),
             basketSnapshot.Basket.BasketDiscount?.Code,
             MapPrice(basketSnapshot.Totals));

@@ -6,6 +6,7 @@ GO
 CREATE PROCEDURE dbo.usp_InsertShippingCost
     @Id UNIQUEIDENTIFIER,
     @Country NVARCHAR(200),
+    @CountryCode INT,
     @Cost INT
 AS
 BEGIN
@@ -14,12 +15,14 @@ BEGIN
     INSERT INTO dbo.ShippingCosts (
         Id,
         Country,
+        CountryCode,
         Cost,
         CreatedAt,
         ModifiedAt)
     VALUES (
         @Id,
         @Country,
+        @CountryCode,
         @Cost,
         SYSUTCDATETIME(),
         SYSUTCDATETIME());

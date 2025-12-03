@@ -4,7 +4,7 @@ BEGIN
 END
 GO
 CREATE PROCEDURE dbo.usp_UpdateShippingCost
-    @Country NVARCHAR(200),
+    @CountryCode INT,
     @Cost INT
 AS
 BEGIN
@@ -13,7 +13,7 @@ BEGIN
     UPDATE dbo.ShippingCosts
     SET Cost = @Cost,
         ModifiedAt = SYSUTCDATETIME()
-    WHERE Country = @Country;
+    WHERE CountryCode = @CountryCode;
 END
 GO
 

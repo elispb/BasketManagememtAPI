@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -307,7 +308,7 @@ public sealed class SqlBasketRepository : IBasketRepository
         await using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT
-                [Country],
+                [CountryCode],
                 [Cost]
             FROM [dbo].[BasketShipping]
             WHERE [BasketId] = @BasketId;
@@ -317,9 +318,12 @@ public sealed class SqlBasketRepository : IBasketRepository
         await using var reader = await command.ExecuteReaderAsync();
         if (await reader.ReadAsync())
         {
-            var country = reader.GetString(0);
+            var countryCodeValue = reader.GetInt32(0);
             var cost = reader.GetInt32(1);
-            basket.SetShipping(new ShippingDetails(country, cost));
+            var countryCode = Enum.IsDefined(typeof(CountryCode), countryCodeValue)
+                ? (CountryCode)countryCodeValue
+                : CountryCode.Unknown;
+            basket.SetShipping(new ShippingDetails(countryCode, cost));
         }
     }
 
@@ -352,7 +356,7 @@ public sealed class SqlBasketRepository : IBasketRepository
         command.CommandText = "usp_UpsertBasketShipping";
         command.CommandType = CommandType.StoredProcedure;
         command.Parameters.AddWithValue("@BasketId", basketId);
-        command.Parameters.AddWithValue("@Country", shipping.Country);
+        command.Parameters.AddWithValue("@CountryCode", (int)shipping.CountryCode);
         command.Parameters.AddWithValue("@Cost", shipping.Cost);
         await command.ExecuteNonQueryAsync();
     }

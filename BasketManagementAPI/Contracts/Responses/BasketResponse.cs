@@ -18,6 +18,6 @@ public sealed record ItemResponse(
     bool HasDiscount,
     string? DiscountDescription);
 
-public sealed record ShippingDetailsResponse(string Country, int Cost);
+public sealed record ShippingDetailsResponse(string CountryCode, int Cost);
 
 

@@ -5,7 +5,7 @@ END
 GO
 CREATE PROCEDURE dbo.usp_UpsertBasketShipping
     @BasketId UNIQUEIDENTIFIER,
-    @Country NVARCHAR(200),
+    @CountryCode INT,
     @Cost INT
 AS
 BEGIN
@@ -14,7 +14,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM dbo.BasketShipping WHERE BasketId = @BasketId)
     BEGIN
         UPDATE dbo.BasketShipping
-        SET Country = @Country,
+        SET CountryCode = @CountryCode,
             Cost = @Cost,
             ModifiedAt = SYSUTCDATETIME()
         WHERE BasketId = @BasketId;
@@ -23,13 +23,13 @@ BEGIN
     BEGIN
         INSERT INTO dbo.BasketShipping (
             BasketId,
-            Country,
+            CountryCode,
             Cost,
             CreatedAt,
             ModifiedAt)
         VALUES (
             @BasketId,
-            @Country,
+            @CountryCode,
             @Cost,
             SYSUTCDATETIME(),
             SYSUTCDATETIME());

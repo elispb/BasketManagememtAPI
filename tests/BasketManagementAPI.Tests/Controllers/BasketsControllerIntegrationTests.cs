@@ -75,7 +75,7 @@ public sealed class BasketsControllerIntegrationTests : IAsyncLifetime
 
         var shippingResponse = await client.PatchAsJsonAsync(
             $"/api/baskets/{basketId}/shipping",
-            new AddShippingRequest("United Kingdom"));
+            new AddShippingRequest("uk"));
 
         shippingResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         var totals = await shippingResponse.Content.ReadFromJsonAsync<PriceResponse>(JsonOptions);
@@ -96,7 +96,24 @@ public sealed class BasketsControllerIntegrationTests : IAsyncLifetime
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         var validation = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>(JsonOptions);
         validation.Should().NotBeNull();
-        validation!.Errors["Country"].Should().Contain("Country is required for shipping.");
+        validation!.Errors["CountryCode"].Should().Contain("Country code is required for shipping.");
+    }
+
+    [Fact]
+    public async Task AddShipping_AcceptsNumericCountryCode()
+    {
+        var client = _factory.CreateClient();
+        var basketId = await CreateBasketAsync(client);
+        await AddSampleItemAsync(client, basketId);
+
+        var shippingResponse = await client.PatchAsJsonAsync(
+            $"/api/baskets/{basketId}/shipping",
+            new AddShippingRequest("1"));
+
+        shippingResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var totals = await shippingResponse.Content.ReadFromJsonAsync<PriceResponse>(JsonOptions);
+        totals.Should().NotBeNull();
+        totals!.Shipping.Should().Be(499);
     }
 
     [Fact]
