@@ -3,7 +3,6 @@ using BasketManagementAPI.Domain.Discounts;
 using BasketManagementAPI.Repositories;
 using BasketManagementAPI.Services;
 using FluentValidation;
-using FluentValidation.AspNetCore;
 using BasketManagementAPI.Validators;
 using Microsoft.Extensions.DependencyInjection;
 using System.IO;
@@ -17,6 +16,7 @@ builder.Services.AddSingleton<KeyNotFoundExceptionFilter>();
 builder.Services.AddControllers(options =>
     {
         options.Filters.AddService<KeyNotFoundExceptionFilter>();
+        options.Filters.AddService<RequestValidationFilter>();
     })
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddEndpointsApiExplorer();
@@ -27,8 +27,8 @@ builder.Services.AddSwaggerGen(options =>
     options.IncludeXmlComments(xmlPath);
 });
 
-builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<AddItemsRequestValidator>();
+builder.Services.AddScoped<RequestValidationFilter>();
 
 builder.Services.AddSingleton<IBasketRepository, SqlBasketRepository>();
 builder.Services.AddSingleton<IDiscountDefinitionRepository, SqlDiscountDefinitionRepository>();
