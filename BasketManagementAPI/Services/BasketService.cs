@@ -42,7 +42,10 @@ public sealed class BasketService : IBasketService
 
         foreach (var itemDefinition in items)
         {
-            var discount = CreateItemDiscount(itemDefinition.ItemDiscount);
+            var discount = itemDefinition.ItemDiscount is null
+                ? null
+                : ItemDiscountFactory.Create(itemDefinition.ItemDiscount.Type, itemDefinition.ItemDiscount.Amount);
+
             var item = new Item(
                 itemDefinition.ProductId,
                 itemDefinition.Name,
@@ -93,22 +96,16 @@ public sealed class BasketService : IBasketService
 
     public async Task<Item> ApplyItemDiscountAsync(Guid basketId, string productId, ItemDiscountDefinition discount)
     {
-        var discountEngine = CreateItemDiscount(discount);
+        var discountEngine = ItemDiscountFactory.Create(discount.Type, discount.Amount);
 
         if (discountEngine is null)
         {
             throw new InvalidOperationException("Unable to resolve item discount.");
         }
 
-        var (type, amount) = GetItemDiscountData(discountEngine);
-        var updated = await _repository.UpdateItemDiscountAsync(basketId, productId, type, amount);
+        var (type, amount) = ItemDiscountFactory.ToPersistedData(discountEngine);
+        var item = await _repository.UpdateItemDiscountAsync(basketId, productId, type, amount);
 
-        if (!updated)
-        {
-            throw new KeyNotFoundException($"Item '{productId}' was not found in basket '{basketId}'.");
-        }
-
-        var item = await _repository.GetItemAsync(basketId, productId);
         if (item is null)
         {
             throw new KeyNotFoundException($"Item '{productId}' was not found in basket '{basketId}'.");
@@ -140,32 +137,6 @@ public sealed class BasketService : IBasketService
         var lineTotal = item.Total();
         var vatAmount = (int)Math.Round(lineTotal * 0.20m, 0, MidpointRounding.AwayFromZero);
         return new ItemPriceTotals(lineTotal, vatAmount, lineTotal + vatAmount);
-    }
-
-    private static IBasketItemDiscount? CreateItemDiscount(ItemDiscountDefinition? definition)
-    {
-        if (definition is null)
-        {
-            return null;
-        }
-
-        return definition.Type switch
-        {
-            ItemDiscountType.FlatAmount => new FlatAmountItemDiscount(definition.Amount),
-            ItemDiscountType.Bogo => new BuyOneGetOneFreeItemDiscount(),
-            _ => throw new NotSupportedException($"Item discount type '{definition.Type}' is not supported.")
-        };
-    }
-
-    private static (byte? Type, int? Amount) GetItemDiscountData(IBasketItemDiscount? discount)
-    {
-        return discount switch
-        {
-            FlatAmountItemDiscount flat => ((byte)ItemDiscountType.FlatAmount, flat.AmountTaken),
-            BuyOneGetOneFreeItemDiscount => ((byte)ItemDiscountType.Bogo, 0),
-            null => (null, null),
-            _ => throw new NotSupportedException("Unsupported item discount type.")
-        };
     }
 
 }

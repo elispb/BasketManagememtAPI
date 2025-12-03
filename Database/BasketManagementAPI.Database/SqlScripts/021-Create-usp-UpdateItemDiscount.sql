@@ -16,9 +16,15 @@ BEGIN
     SET ItemDiscountType = @ItemDiscountType,
         ItemDiscountAmount = @ItemDiscountAmount,
         ModifiedAt = SYSUTCDATETIME()
+    OUTPUT
+        inserted.ProductId,
+        inserted.Name,
+        inserted.UnitPrice,
+        inserted.Quantity,
+        inserted.ItemDiscountType,
+        inserted.ItemDiscountAmount
     WHERE BasketId = @BasketId
       AND ProductId = @ProductId;
-    RETURN @@ROWCOUNT;
 END
 GO
 

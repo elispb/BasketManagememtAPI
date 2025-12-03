@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using BasketManagementAPI.Domain.Baskets;
 using BasketManagementAPI.Domain.Discounts;
 using BasketManagementAPI.Domain.Shipping;
@@ -43,7 +45,10 @@ public sealed class SqlBasketRepository : IBasketRepository
 
             await command.ExecuteNonQueryAsync();
 
-            await InsertItemsAsync(connection, basket.Id, basket.Items, transaction);
+            foreach (var item in basket.Items)
+            {
+                await UpsertItemAsync(connection, basket.Id, item, transaction);
+            }
 
             if (basket.ShippingDetails is not null)
             {
@@ -72,8 +77,20 @@ public sealed class SqlBasketRepository : IBasketRepository
         try
         {
             await UpdateBasketAsync(connection, basket, transaction);
-            await DeleteItemsAsync(connection, basket.Id, transaction);
-            await InsertItemsAsync(connection, basket.Id, basket.Items, transaction);
+
+            var existingProductIds = await LoadExistingProductIdsAsync(connection, basket.Id, transaction);
+            var currentProductIds = new HashSet<string>(basket.Items.Select(item => item.ProductId), StringComparer.OrdinalIgnoreCase);
+
+            foreach (var productId in existingProductIds.Except(currentProductIds, StringComparer.OrdinalIgnoreCase))
+            {
+                await DeleteItemInternalAsync(connection, basket.Id, productId, transaction);
+            }
+
+            foreach (var item in basket.Items)
+            {
+                await UpsertItemAsync(connection, basket.Id, item, transaction);
+            }
+
             await HandleBasketShippingAsync(connection, basket, transaction);
 
             await transaction.CommitAsync();
@@ -92,32 +109,6 @@ public sealed class SqlBasketRepository : IBasketRepository
             basket.DiscountDefinitionId.HasValue ? (object)basket.DiscountDefinitionId.Value : DBNull.Value);
     }
 
-    private static (byte? Type, int? Amount) GetItemDiscountData(IBasketItemDiscount? discount)
-    {
-        return discount switch
-        {
-            FlatAmountItemDiscount flat => ((byte)ItemDiscountType.FlatAmount, flat.AmountTaken),
-            BuyOneGetOneFreeItemDiscount => ((byte)ItemDiscountType.Bogo, 0),
-            null => (null, null),
-            _ => throw new NotSupportedException("Unsupported item discount type.")
-        };
-    }
-
-    private static IBasketItemDiscount? BuildItemDiscount(byte? type, int? amount)
-    {
-        if (!type.HasValue)
-        {
-            return null;
-        }
-
-        return ((ItemDiscountType)type.Value) switch
-        {
-            ItemDiscountType.FlatAmount => new FlatAmountItemDiscount(amount ?? 0),
-            ItemDiscountType.Bogo => new BuyOneGetOneFreeItemDiscount(),
-            _ => throw new NotSupportedException($"Item discount type '{type}' is not supported.")
-        };
-    }
-
     private static Item BuildItem(SqlDataReader reader)
     {
         var productId = reader.GetString(0);
@@ -126,7 +117,7 @@ public sealed class SqlBasketRepository : IBasketRepository
         var quantity = reader.GetInt32(3);
         var discountType = reader.IsDBNull(4) ? null : (byte?)reader.GetByte(4);
         var discountAmount = reader.IsDBNull(5) ? null : (int?)reader.GetInt32(5);
-        var discount = BuildItemDiscount(discountType, discountAmount);
+        var discount = ItemDiscountFactory.Create(discountType, discountAmount);
 
         return new Item(productId, name, unitPrice, quantity, discount);
     }
@@ -245,7 +236,7 @@ public sealed class SqlBasketRepository : IBasketRepository
         return returnParam.Value is int rows && rows > 0;
     }
 
-    public async Task<bool> UpdateItemDiscountAsync(
+    public async Task<Item?> UpdateItemDiscountAsync(
         Guid basketId,
         string productId,
         byte? itemDiscountType,
@@ -264,10 +255,13 @@ public sealed class SqlBasketRepository : IBasketRepository
             "@ItemDiscountAmount",
             itemDiscountAmount.HasValue ? (object)itemDiscountAmount.Value : DBNull.Value);
 
-        var returnParam = command.Parameters.Add("@ReturnValue", SqlDbType.Int);
-        returnParam.Direction = ParameterDirection.ReturnValue;
-        await command.ExecuteNonQueryAsync();
-        return returnParam.Value is int rows && rows > 0;
+        await using var reader = await command.ExecuteReaderAsync();
+        if (!await reader.ReadAsync())
+        {
+            return null;
+        }
+
+        return BuildItem(reader);
     }
 
     private static async Task LoadShippingAsync(SqlConnection connection, Basket basket)
@@ -302,90 +296,6 @@ public sealed class SqlBasketRepository : IBasketRepository
         await command.ExecuteNonQueryAsync();
     }
 
-    private static async Task DeleteItemsAsync(SqlConnection connection, Guid basketId, SqlTransaction transaction)
-    {
-        await using var command = connection.CreateCommand();
-        command.Transaction = transaction;
-        command.CommandText = "usp_DeleteItemsForBasket";
-        command.CommandType = CommandType.StoredProcedure;
-        command.Parameters.AddWithValue("@BasketId", basketId);
-        await command.ExecuteNonQueryAsync();
-    }
-
-    private static async Task InsertItemsAsync(SqlConnection connection, Guid basketId, IEnumerable<Item> items, SqlTransaction transaction)
-    {
-        var itemList = items.ToList();
-        if (itemList.Count == 0)
-        {
-            return;
-        }
-
-        var table = CreateItemDataTable();
-        var now = DateTime.UtcNow;
-
-        foreach (var item in itemList)
-        {
-            var (type, amount) = GetItemDiscountData(item.ItemDiscount);
-
-            var row = table.NewRow();
-            row["Id"] = Guid.NewGuid();
-            row["BasketId"] = basketId;
-            row["ProductId"] = item.ProductId;
-            row["Name"] = item.Name;
-            row["UnitPrice"] = item.UnitPrice;
-            row["Quantity"] = item.Quantity;
-            row["ItemDiscountType"] = type.HasValue ? (object)type.Value : DBNull.Value;
-            row["ItemDiscountAmount"] = amount.HasValue ? (object)amount.Value : DBNull.Value;
-            row["CreatedAt"] = now;
-            row["ModifiedAt"] = now;
-            table.Rows.Add(row);
-        }
-
-        using var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.Default, transaction)
-        {
-            DestinationTableName = "dbo.Items"
-        };
-
-        bulkCopy.ColumnMappings.Add("Id", "Id");
-        bulkCopy.ColumnMappings.Add("BasketId", "BasketId");
-        bulkCopy.ColumnMappings.Add("ProductId", "ProductId");
-        bulkCopy.ColumnMappings.Add("Name", "Name");
-        bulkCopy.ColumnMappings.Add("UnitPrice", "UnitPrice");
-        bulkCopy.ColumnMappings.Add("Quantity", "Quantity");
-        bulkCopy.ColumnMappings.Add("ItemDiscountType", "ItemDiscountType");
-        bulkCopy.ColumnMappings.Add("ItemDiscountAmount", "ItemDiscountAmount");
-        bulkCopy.ColumnMappings.Add("CreatedAt", "CreatedAt");
-        bulkCopy.ColumnMappings.Add("ModifiedAt", "ModifiedAt");
-
-        await bulkCopy.WriteToServerAsync(table);
-    }
-
-    private static DataTable CreateItemDataTable()
-    {
-        var table = new DataTable();
-        table.Columns.Add(new DataColumn("Id", typeof(Guid)));
-        table.Columns.Add(new DataColumn("BasketId", typeof(Guid)));
-        table.Columns.Add(new DataColumn("ProductId", typeof(string)));
-        table.Columns.Add(new DataColumn("Name", typeof(string)));
-        table.Columns.Add(new DataColumn("UnitPrice", typeof(int)));
-        table.Columns.Add(new DataColumn("Quantity", typeof(int)));
-
-        table.Columns.Add(new DataColumn("ItemDiscountType", typeof(byte))
-        {
-            AllowDBNull = true
-        });
-
-        table.Columns.Add(new DataColumn("ItemDiscountAmount", typeof(int))
-        {
-            AllowDBNull = true
-        });
-
-        table.Columns.Add(new DataColumn("CreatedAt", typeof(DateTime)));
-        table.Columns.Add(new DataColumn("ModifiedAt", typeof(DateTime)));
-
-        return table;
-    }
-
     private static async Task HandleBasketShippingAsync(SqlConnection connection, Basket basket, SqlTransaction transaction)
     {
         if (basket.ShippingDetails is null)
@@ -416,6 +326,63 @@ public sealed class SqlBasketRepository : IBasketRepository
         command.CommandText = "usp_DeleteBasketShipping";
         command.CommandType = CommandType.StoredProcedure;
         command.Parameters.AddWithValue("@BasketId", basketId);
+        await command.ExecuteNonQueryAsync();
+    }
+
+    private static async Task<HashSet<string>> LoadExistingProductIdsAsync(SqlConnection connection, Guid basketId, SqlTransaction transaction)
+    {
+        var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = """
+            SELECT
+                [ProductId]
+            FROM [dbo].[Items]
+            WHERE [BasketId] = @BasketId;
+            """;
+        command.Parameters.AddWithValue("@BasketId", basketId);
+
+        await using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            result.Add(reader.GetString(0));
+        }
+
+        return result;
+    }
+
+    private static async Task DeleteItemInternalAsync(SqlConnection connection, Guid basketId, string productId, SqlTransaction transaction)
+    {
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = "usp_DeleteItem";
+        command.CommandType = CommandType.StoredProcedure;
+        command.Parameters.AddWithValue("@BasketId", basketId);
+        command.Parameters.AddWithValue("@ProductId", productId);
+        await command.ExecuteNonQueryAsync();
+    }
+
+    private static async Task UpsertItemAsync(SqlConnection connection, Guid basketId, Item item, SqlTransaction transaction)
+    {
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = "usp_UpsertItem";
+        command.CommandType = CommandType.StoredProcedure;
+        command.Parameters.AddWithValue("@BasketId", basketId);
+        command.Parameters.AddWithValue("@ProductId", item.ProductId);
+        command.Parameters.AddWithValue("@Name", item.Name);
+        command.Parameters.AddWithValue("@UnitPrice", item.UnitPrice);
+        command.Parameters.AddWithValue("@Quantity", item.Quantity);
+
+        var (type, amount) = ItemDiscountFactory.ToPersistedData(item.ItemDiscount);
+        command.Parameters.AddWithValue(
+            "@ItemDiscountType",
+            type.HasValue ? (object)type.Value : DBNull.Value);
+        command.Parameters.AddWithValue(
+            "@ItemDiscountAmount",
+            amount.HasValue ? (object)amount.Value : DBNull.Value);
+
         await command.ExecuteNonQueryAsync();
     }
 

@@ -1,7 +1,7 @@
 ## Startup Instructions
 
 1. **Run the SQL Server container**  
-   - From the repo root (`C:\Users\elisp\source\repos\BasketManagementAPI`), execute:  
+   - From the repository root, execute:  
      `docker compose -f docker-compose.tests.yml up -d`  
      This starts `mcr.microsoft.com/mssql/server:2022-latest` on port `1433` with the SA credentials the API expects.
    - Wait for the container’s health check to pass (check with `docker ps` to ensure the service is healthy).
