@@ -7,6 +7,7 @@ using BasketManagementAPI.Contracts.Responses;
 using BasketManagementAPI.Domain.Discounts;
 using BasketManagementAPI.Tests.Infrastructure;
 using FluentAssertions;
+using Microsoft.AspNetCore.Mvc;
 using Xunit;
 
 namespace BasketManagementAPI.Tests.Controllers;
@@ -82,6 +83,22 @@ public sealed class BasketsControllerIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task AddShipping_ReturnsBadRequest_WhenCountryMissing()
+    {
+        var client = _factory.CreateClient();
+        var basketId = await CreateBasketAsync(client);
+
+        var response = await client.PatchAsJsonAsync(
+            $"/api/baskets/{basketId}/shipping",
+            new AddShippingRequest(string.Empty));
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var validation = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>(JsonOptions);
+        validation.Should().NotBeNull();
+        validation!.Errors["Country"].Should().Contain("Country is required for shipping.");
+    }
+
+    [Fact]
     public async Task ApplyDiscount_ReturnsTotalsWithDiscount()
     {
         var client = _factory.CreateClient();
@@ -100,6 +117,23 @@ public sealed class BasketsControllerIntegrationTests : IAsyncLifetime
         basket.Should().NotBeNull();
         basket!.DiscountCode.Should().Be("TEST10");
         basket.Totals.Discount.Should().Be(40);
+    }
+
+    [Fact]
+    public async Task ApplyDiscount_ReturnsBadRequest_WhenRequestIsInvalid()
+    {
+        var client = _factory.CreateClient();
+        var basketId = await CreateBasketAsync(client);
+
+        var response = await client.PatchAsJsonAsync(
+            $"/api/baskets/{basketId}/discount",
+            new ApplyDiscountRequest(string.Empty, 0));
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var validation = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>(JsonOptions);
+        validation.Should().NotBeNull();
+        validation!.Errors["Code"].Should().Contain("Discount code is required.");
+        validation.Errors["Percentage"].Should().Contain("Percentage must be greater than zero.");
     }
 
     private static async Task<Guid> CreateBasketAsync(HttpClient client)

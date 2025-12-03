@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -7,6 +8,7 @@ using BasketManagementAPI.Contracts.Responses;
 using BasketManagementAPI.Domain.Discounts;
 using BasketManagementAPI.Tests.Infrastructure;
 using FluentAssertions;
+using Microsoft.AspNetCore.Mvc;
 using Xunit;
 
 namespace BasketManagementAPI.Tests.Controllers;
@@ -89,6 +91,60 @@ public sealed class ItemsControllerIntegrationTests : IAsyncLifetime
 
         var getResponse = await client.GetAsync($"/api/baskets/{basketId}/items/{productId}");
         getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task AddItems_ReturnsBadRequest_WhenItemsCollectionIsEmpty()
+    {
+        var client = _factory.CreateClient();
+        var basketId = await CreateBasketAsync(client);
+
+        var response = await client.PostAsJsonAsync(
+            $"/api/baskets/{basketId}/items",
+            new AddItemsRequest(Array.Empty<AddItemRequest>()));
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var content = await response.Content.ReadAsStringAsync();
+        content.Should().Contain("At least one item must be supplied.");
+    }
+
+    [Fact]
+    public async Task AddItems_ReturnsBadRequest_WhenItemFieldsFailValidation()
+    {
+        var client = _factory.CreateClient();
+        var basketId = await CreateBasketAsync(client);
+
+        var response = await client.PostAsJsonAsync(
+            $"/api/baskets/{basketId}/items",
+            new AddItemsRequest(new[]
+            {
+                new AddItemRequest("SKU-INVALID", "Item", 0, 0, null)
+            }));
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var validation = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>(JsonOptions);
+        validation.Should().NotBeNull();
+        validation!.Errors.Values.SelectMany(e => e).Should().Contain("Unit price must be greater than zero.");
+        validation.Errors.Values.SelectMany(e => e).Should().Contain("Quantity must be greater than zero.");
+    }
+
+    [Fact]
+    public async Task ApplyItemDiscount_ReturnsBadRequest_WhenAmountIsZero()
+    {
+        var client = _factory.CreateClient();
+        var basketId = await CreateBasketAsync(client);
+        const string productId = "SKU-ITEM-004";
+
+        await AddItemsAsync(client, basketId, productId, 120, 1);
+
+        var response = await client.PatchAsJsonAsync(
+            $"/api/baskets/{basketId}/items/{productId}/discount",
+            new ItemDiscountRequest(ItemDiscountType.FlatAmount, 0));
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var validation = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>(JsonOptions);
+        validation.Should().NotBeNull();
+        validation!.Errors.Values.SelectMany(e => e).Should().Contain("Discount amount must be greater than zero.");
     }
 
     private static async Task<Guid> CreateBasketAsync(HttpClient client)
