@@ -45,7 +45,10 @@ public sealed class BasketsController : ControllerBase
     /// Applies a discount code to an existing basket.
     /// </summary>
     /// <param name="basketId">Identifier of the basket to update.</param>
-    /// <param name="request">Discount code details.</param>
+    /// <param name="request">
+    ///     Request payload containing the discount code to apply and the percentage that should be removed from the basket
+    ///     total (greater than 0 and no more than 100).
+    /// </param>
     /// <returns>A <see cref="NoContentResult"/> when the discount is applied.</returns>
     [HttpPatch("{basketId:guid}/discount")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -59,7 +62,10 @@ public sealed class BasketsController : ControllerBase
     /// Adds shipping costs to the specified basket.
     /// </summary>
     /// <param name="basketId">Identifier of the basket to update.</param>
-    /// <param name="request">Country information used to calculate shipping.</param>
+    /// <param name="request">
+    ///     Request payload containing destination country information. The provided country name is required, is trimmed,
+    ///     and is used to look up the shipping rate before returning updated totals.
+    /// </param>
     /// <returns>The updated basket totals after shipping is applied.</returns>
     [HttpPatch("{basketId:guid}/shipping")]
     [ProducesResponseType(typeof(PriceResponse), StatusCodes.Status200OK)]
