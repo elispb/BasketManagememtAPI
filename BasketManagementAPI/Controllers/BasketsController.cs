@@ -8,11 +8,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BasketManagementAPI.Controllers;
 
-[ApiController]
-[Route("api/[controller]")]
 /// <summary>
 /// Manages baskets, including creation, shipping, and discounts.
 /// </summary>
+[ApiController]
+[Route("api/[controller]")]
 public sealed class BasketsController : ControllerBase
 {
     private readonly IBasketService _basketService;
@@ -26,12 +26,12 @@ public sealed class BasketsController : ControllerBase
         _basketService = basketService;
     }
 
-    [HttpPost]
-    [ProducesResponseType(StatusCodes.Status201Created)]
     /// <summary>
     /// Creates an empty basket and returns a reference to it.
     /// </summary>
     /// <returns>A <see cref="CreatedAtActionResult"/> with the new basket identifier.</returns>
+    [HttpPost]
+    [ProducesResponseType(StatusCodes.Status201Created)]
     public async Task<IActionResult> CreateBasket()
     {
         var basket = await _basketService.CreateBasketAsync();
@@ -41,41 +41,41 @@ public sealed class BasketsController : ControllerBase
             new { basketId = basket.Id });
     }
 
-    [HttpPatch("{basketId:guid}/discount")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
     /// <summary>
     /// Applies a discount code to an existing basket.
     /// </summary>
     /// <param name="basketId">Identifier of the basket to update.</param>
     /// <param name="request">Discount code details.</param>
     /// <returns>A <see cref="NoContentResult"/> when the discount is applied.</returns>
+    [HttpPatch("{basketId:guid}/discount")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> ApplyDiscount(Guid basketId, ApplyDiscountRequest request)
     {
         await _basketService.ApplyDiscountCodeAsync(basketId, request.Code, request.Percentage);
         return NoContent();
     }
 
-    [HttpPatch("{basketId:guid}/shipping")]
-    [ProducesResponseType(typeof(PriceResponse), StatusCodes.Status200OK)]
     /// <summary>
     /// Adds shipping costs to the specified basket.
     /// </summary>
     /// <param name="basketId">Identifier of the basket to update.</param>
     /// <param name="request">Country information used to calculate shipping.</param>
     /// <returns>The updated basket totals after shipping is applied.</returns>
+    [HttpPatch("{basketId:guid}/shipping")]
+    [ProducesResponseType(typeof(PriceResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> AddShipping(Guid basketId, AddShippingRequest request)
     {
         var totals = await _basketService.AddShippingAsync(basketId, request.Country);
         return Ok(MapPrice(totals));
     }
 
-    [HttpGet("{basketId:guid}")]
-    [ProducesResponseType(typeof(BasketResponse), StatusCodes.Status200OK)]
     /// <summary>
     /// Retrieves the current state of a basket.
     /// </summary>
     /// <param name="basketId">Identifier of the basket to return.</param>
     /// <returns>The basket snapshot including items, shipping and discounts.</returns>
+    [HttpGet("{basketId:guid}")]
+    [ProducesResponseType(typeof(BasketResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetBasket(Guid basketId)
     {
         var snapshot = await _basketService.GetBasketAsync(basketId);
