@@ -14,7 +14,7 @@ public sealed class TotalsCalculatorTests
     {
         var basketId = Guid.NewGuid();
         var basket = new Basket(basketId);
-        basket.AddOrUpdateItem(new Item("p-1", "Item 1", 100, 2, null));
+        basket.AddOrUpdateItem(Item.Create("Item 1", 100, 2, null));
 
         var definitionId = Guid.NewGuid();
         basket.ApplyDiscount(new PercentageBasketDiscount("SAVE50", 50m), definitionId);

@@ -5,7 +5,6 @@ END
 GO
 CREATE PROCEDURE dbo.usp_UpdateItem
     @Id UNIQUEIDENTIFIER,
-    @ProductId NVARCHAR(100),
     @Name NVARCHAR(200),
     @UnitPrice INT,
     @Quantity INT,
@@ -16,8 +15,7 @@ BEGIN
     SET NOCOUNT ON;
 
     UPDATE dbo.Items
-    SET ProductId = @ProductId,
-        Name = @Name,
+    SET Name = @Name,
         UnitPrice = @UnitPrice,
         Quantity = @Quantity,
         ItemDiscountType = @ItemDiscountType,

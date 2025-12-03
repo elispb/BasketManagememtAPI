@@ -6,12 +6,12 @@ GO
 CREATE PROCEDURE dbo.usp_InsertItem
     @Id UNIQUEIDENTIFIER,
     @BasketId UNIQUEIDENTIFIER,
-    @ProductId NVARCHAR(100),
     @Name NVARCHAR(200),
     @UnitPrice INT,
     @Quantity INT,
     @ItemDiscountType TINYINT = NULL,
-    @ItemDiscountAmount INT = NULL
+    @ItemDiscountAmount INT = NULL,
+    @ResolvedProductId INT OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -19,7 +19,6 @@ BEGIN
     INSERT INTO dbo.Items (
         Id,
         BasketId,
-        ProductId,
         Name,
         UnitPrice,
         Quantity,
@@ -30,7 +29,6 @@ BEGIN
     VALUES (
         @Id,
         @BasketId,
-        @ProductId,
         @Name,
         @UnitPrice,
         @Quantity,
@@ -38,6 +36,8 @@ BEGIN
         @ItemDiscountAmount,
         SYSUTCDATETIME(),
         SYSUTCDATETIME());
+
+    SET @ResolvedProductId = CAST(SCOPE_IDENTITY() AS INT);
 END
 GO
 

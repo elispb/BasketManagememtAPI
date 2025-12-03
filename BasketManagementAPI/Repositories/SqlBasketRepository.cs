@@ -47,7 +47,11 @@ public sealed class SqlBasketRepository : IBasketRepository
 
             foreach (var item in basket.Items)
             {
-                await UpsertItemAsync(connection, basket.Id, item, transaction);
+                var resolvedId = await UpsertItemAsync(connection, basket.Id, item, transaction);
+                if (!item.HasProductId)
+                {
+                    item.AssignProductId(resolvedId);
+                }
             }
 
             if (basket.ShippingDetails is not null)
@@ -79,16 +83,23 @@ public sealed class SqlBasketRepository : IBasketRepository
             await UpdateBasketAsync(connection, basket, transaction);
 
             var existingProductIds = await LoadExistingProductIdsAsync(connection, basket.Id, transaction);
-            var currentProductIds = new HashSet<string>(basket.Items.Select(item => item.ProductId), StringComparer.OrdinalIgnoreCase);
+            var currentProductIds = new HashSet<int>(
+                basket.Items
+                    .Where(item => item.HasProductId)
+                    .Select(item => item.ProductId));
 
-            foreach (var productId in existingProductIds.Except(currentProductIds, StringComparer.OrdinalIgnoreCase))
+            foreach (var productId in existingProductIds.Except(currentProductIds))
             {
                 await DeleteItemInternalAsync(connection, basket.Id, productId, transaction);
             }
 
             foreach (var item in basket.Items)
             {
-                await UpsertItemAsync(connection, basket.Id, item, transaction);
+                var resolvedId = await UpsertItemAsync(connection, basket.Id, item, transaction);
+                if (!item.HasProductId)
+                {
+                    item.AssignProductId(resolvedId);
+                }
             }
 
             await HandleBasketShippingAsync(connection, basket, transaction);
@@ -111,7 +122,7 @@ public sealed class SqlBasketRepository : IBasketRepository
 
     private static Item BuildItem(SqlDataReader reader)
     {
-        var productId = reader.GetString(0);
+        var productId = reader.GetInt32(0);
         var name = reader.GetString(1);
         var unitPrice = reader.GetInt32(2);
         var quantity = reader.GetInt32(3);
@@ -119,7 +130,7 @@ public sealed class SqlBasketRepository : IBasketRepository
         var discountAmount = reader.IsDBNull(5) ? null : (int?)reader.GetInt32(5);
         var discount = ItemDiscountFactory.Create(discountType, discountAmount);
 
-        return new Item(productId, name, unitPrice, quantity, discount);
+        return Item.FromStore(productId, name, unitPrice, quantity, discount);
     }
 
     private static async Task<Basket> LoadBasketAsync(SqlConnection connection, Guid id)
@@ -193,7 +204,7 @@ public sealed class SqlBasketRepository : IBasketRepository
         }
     }
 
-    public async Task<Item?> GetItemAsync(Guid basketId, string productId)
+    public async Task<Item?> GetItemAsync(Guid basketId, int productId)
     {
         await using var connection = await CreateOpenConnectionAsync();
         await using var command = connection.CreateCommand();
@@ -221,7 +232,7 @@ public sealed class SqlBasketRepository : IBasketRepository
         return BuildItem(reader);
     }
 
-    public async Task<bool> DeleteItemAsync(Guid basketId, string productId)
+    public async Task<bool> DeleteItemAsync(Guid basketId, int productId)
     {
         await using var connection = await CreateOpenConnectionAsync();
         await using var command = connection.CreateCommand();
@@ -238,7 +249,7 @@ public sealed class SqlBasketRepository : IBasketRepository
 
     public async Task<Item?> UpdateItemDiscountAsync(
         Guid basketId,
-        string productId,
+        int productId,
         byte? itemDiscountType,
         int? itemDiscountAmount)
     {
@@ -329,9 +340,9 @@ public sealed class SqlBasketRepository : IBasketRepository
         await command.ExecuteNonQueryAsync();
     }
 
-    private static async Task<HashSet<string>> LoadExistingProductIdsAsync(SqlConnection connection, Guid basketId, SqlTransaction transaction)
+    private static async Task<HashSet<int>> LoadExistingProductIdsAsync(SqlConnection connection, Guid basketId, SqlTransaction transaction)
     {
-        var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var result = new HashSet<int>();
 
         await using var command = connection.CreateCommand();
         command.Transaction = transaction;
@@ -346,13 +357,13 @@ public sealed class SqlBasketRepository : IBasketRepository
         await using var reader = await command.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
-            result.Add(reader.GetString(0));
+            result.Add(reader.GetInt32(0));
         }
 
         return result;
     }
 
-    private static async Task DeleteItemInternalAsync(SqlConnection connection, Guid basketId, string productId, SqlTransaction transaction)
+    private static async Task DeleteItemInternalAsync(SqlConnection connection, Guid basketId, int productId, SqlTransaction transaction)
     {
         await using var command = connection.CreateCommand();
         command.Transaction = transaction;
@@ -363,14 +374,16 @@ public sealed class SqlBasketRepository : IBasketRepository
         await command.ExecuteNonQueryAsync();
     }
 
-    private static async Task UpsertItemAsync(SqlConnection connection, Guid basketId, Item item, SqlTransaction transaction)
+    private static async Task<int> UpsertItemAsync(SqlConnection connection, Guid basketId, Item item, SqlTransaction transaction)
     {
         await using var command = connection.CreateCommand();
         command.Transaction = transaction;
         command.CommandText = "usp_UpsertItem";
         command.CommandType = CommandType.StoredProcedure;
         command.Parameters.AddWithValue("@BasketId", basketId);
-        command.Parameters.AddWithValue("@ProductId", item.ProductId);
+        command.Parameters.AddWithValue(
+            "@ProductId",
+            item.HasProductId ? (object)item.ProductId : DBNull.Value);
         command.Parameters.AddWithValue("@Name", item.Name);
         command.Parameters.AddWithValue("@UnitPrice", item.UnitPrice);
         command.Parameters.AddWithValue("@Quantity", item.Quantity);
@@ -382,8 +395,12 @@ public sealed class SqlBasketRepository : IBasketRepository
         command.Parameters.AddWithValue(
             "@ItemDiscountAmount",
             amount.HasValue ? (object)amount.Value : DBNull.Value);
+        var resolvedProductId = command.Parameters.Add("@ResolvedProductId", SqlDbType.Int);
+        resolvedProductId.Direction = ParameterDirection.Output;
 
         await command.ExecuteNonQueryAsync();
+
+        return resolvedProductId.Value is int id ? id : throw new InvalidOperationException("Unable to determine product ID.");
     }
 
     private async Task<SqlConnection> CreateOpenConnectionAsync()

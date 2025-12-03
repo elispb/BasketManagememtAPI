@@ -10,7 +10,7 @@ public sealed record BasketResponse(
     PriceResponse Totals);
 
 public sealed record ItemResponse(
-    string ProductId,
+    int ProductId,
     string Name,
     int UnitPrice,
     int Quantity,

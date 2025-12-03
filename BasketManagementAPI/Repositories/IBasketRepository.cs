@@ -10,9 +10,9 @@ public interface IBasketRepository
 
     Task SaveAsync(Basket basket);
 
-    Task<bool> DeleteItemAsync(Guid basketId, string productId);
+    Task<bool> DeleteItemAsync(Guid basketId, int productId);
 
-    Task<Item?> UpdateItemDiscountAsync(Guid basketId, string productId, byte? itemDiscountType, int? itemDiscountAmount);
+    Task<Item?> UpdateItemDiscountAsync(Guid basketId, int productId, byte? itemDiscountType, int? itemDiscountAmount);
 
-    Task<Item?> GetItemAsync(Guid basketId, string productId);
+    Task<Item?> GetItemAsync(Guid basketId, int productId);
 }

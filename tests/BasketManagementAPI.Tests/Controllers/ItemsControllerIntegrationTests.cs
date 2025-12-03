@@ -39,9 +39,7 @@ public sealed class ItemsControllerIntegrationTests : IAsyncLifetime
     {
         var client = _factory.CreateClient();
         var basketId = await CreateBasketAsync(client);
-        const string productId = "SKU-ITEM-001";
-
-        await AddItemsAsync(client, basketId, productId, 150, 1);
+        var productId = await AddItemsAsync(client, basketId, 150, 1);
 
         var getResponse = await client.GetAsync($"/api/baskets/{basketId}/items/{productId}");
         getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -57,9 +55,7 @@ public sealed class ItemsControllerIntegrationTests : IAsyncLifetime
     {
         var client = _factory.CreateClient();
         var basketId = await CreateBasketAsync(client);
-        const string productId = "SKU-ITEM-002";
-
-        await AddItemsAsync(client, basketId, productId, 120, 2);
+        var productId = await AddItemsAsync(client, basketId, 120, 2);
 
         var discountResponse = await client.PatchAsJsonAsync(
             $"/api/baskets/{basketId}/items/{productId}/discount",
@@ -82,9 +78,7 @@ public sealed class ItemsControllerIntegrationTests : IAsyncLifetime
     {
         var client = _factory.CreateClient();
         var basketId = await CreateBasketAsync(client);
-        const string productId = "SKU-ITEM-003";
-
-        await AddItemsAsync(client, basketId, productId, 75, 1);
+        var productId = await AddItemsAsync(client, basketId, 75, 1);
 
         var deleteResponse = await client.DeleteAsync($"/api/baskets/{basketId}/items/{productId}");
         deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -118,7 +112,7 @@ public sealed class ItemsControllerIntegrationTests : IAsyncLifetime
             $"/api/baskets/{basketId}/items",
             new AddItemsRequest(new[]
             {
-                new AddItemRequest("SKU-INVALID", "Item", 0, 0, null)
+                new AddItemRequest("Item", 0, 0, null)
             }));
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -133,9 +127,7 @@ public sealed class ItemsControllerIntegrationTests : IAsyncLifetime
     {
         var client = _factory.CreateClient();
         var basketId = await CreateBasketAsync(client);
-        const string productId = "SKU-ITEM-004";
-
-        await AddItemsAsync(client, basketId, productId, 120, 1);
+        var productId = await AddItemsAsync(client, basketId, 120, 1);
 
         var response = await client.PatchAsJsonAsync(
             $"/api/baskets/{basketId}/items/{productId}/discount",
@@ -155,15 +147,22 @@ public sealed class ItemsControllerIntegrationTests : IAsyncLifetime
         return payload.GetProperty("basketId").GetGuid();
     }
 
-    private static async Task AddItemsAsync(HttpClient client, Guid basketId, string productId, int unitPrice, int quantity)
+    private static async Task<int> AddItemsAsync(HttpClient client, Guid basketId, int unitPrice, int quantity)
     {
         var addItemsRequest = new AddItemsRequest(new[]
         {
-            new AddItemRequest(productId, "Integration item", unitPrice, quantity, null)
+            new AddItemRequest("Integration item", unitPrice, quantity, null)
         });
 
         var response = await client.PostAsJsonAsync($"/api/baskets/{basketId}/items", addItemsRequest);
-        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var createdItems = await response.Content.ReadFromJsonAsync<ItemResponse[]>(JsonOptions);
+        createdItems.Should().NotBeNull();
+        var created = createdItems!.Single();
+        created.ProductId.Should().BeGreaterThan(0);
+        created.Quantity.Should().Be(quantity);
+        return created.ProductId;
     }
 }
 

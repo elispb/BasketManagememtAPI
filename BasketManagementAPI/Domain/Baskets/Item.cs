@@ -5,7 +5,9 @@ namespace BasketManagementAPI.Domain.Baskets;
 
 public sealed class Item
 {
-    public string ProductId { get; }
+    private const int UnassignedProductId = 0;
+
+    public int ProductId { get; private set; }
 
     public string Name { get; }
 
@@ -17,11 +19,13 @@ public sealed class Item
 
     public bool HasItemDiscount => ItemDiscount is not null;
 
-    public Item(string productId, string name, int unitPrice, int quantity, IBasketItemDiscount? itemDiscount)
+    public bool HasProductId => ProductId > UnassignedProductId;
+
+    private Item(int productId, string name, int unitPrice, int quantity, IBasketItemDiscount? itemDiscount)
     {
-        if (string.IsNullOrWhiteSpace(productId))
+        if (productId < UnassignedProductId)
         {
-            throw new ArgumentException("Product ID is required", nameof(productId));
+            throw new ArgumentOutOfRangeException(nameof(productId), "Product ID cannot be negative.");
         }
 
         if (string.IsNullOrWhiteSpace(name))
@@ -44,6 +48,34 @@ public sealed class Item
         UnitPrice = unitPrice;
         Quantity = quantity;
         ItemDiscount = itemDiscount;
+    }
+
+    public static Item Create(string name, int unitPrice, int quantity, IBasketItemDiscount? itemDiscount)
+        => new(UnassignedProductId, name, unitPrice, quantity, itemDiscount);
+
+    public static Item FromStore(int productId, string name, int unitPrice, int quantity, IBasketItemDiscount? itemDiscount)
+    {
+        if (productId <= UnassignedProductId)
+        {
+            throw new ArgumentOutOfRangeException(nameof(productId), "Product ID must be greater than zero.");
+        }
+
+        return new Item(productId, name, unitPrice, quantity, itemDiscount);
+    }
+
+    public void AssignProductId(int productId)
+    {
+        if (productId <= UnassignedProductId)
+        {
+            throw new ArgumentOutOfRangeException(nameof(productId), "Product ID must be greater than zero.");
+        }
+
+        if (HasProductId)
+        {
+            throw new InvalidOperationException("Product ID is already assigned.");
+        }
+
+        ProductId = productId;
     }
 
     public void IncreaseQuantity(int amount)
@@ -73,7 +105,13 @@ public sealed class Item
             return false;
         }
 
-        return string.Equals(ProductId, other.ProductId, StringComparison.OrdinalIgnoreCase)
+        if (HasProductId && other.HasProductId)
+        {
+            return ProductId == other.ProductId && Equals(ItemDiscount, other.ItemDiscount);
+        }
+
+        return string.Equals(Name, other.Name, StringComparison.OrdinalIgnoreCase)
+               && UnitPrice == other.UnitPrice
                && Equals(ItemDiscount, other.ItemDiscount);
     }
 

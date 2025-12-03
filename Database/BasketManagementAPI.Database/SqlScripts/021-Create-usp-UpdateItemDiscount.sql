@@ -5,7 +5,7 @@ END
 GO
 CREATE PROCEDURE dbo.usp_UpdateItemDiscount
     @BasketId UNIQUEIDENTIFIER,
-    @ProductId NVARCHAR(100),
+    @ProductId INT,
     @ItemDiscountType TINYINT = NULL,
     @ItemDiscountAmount INT = NULL
 AS

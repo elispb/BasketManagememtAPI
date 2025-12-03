@@ -5,7 +5,7 @@ END
 GO
 CREATE PROCEDURE dbo.usp_DeleteItem
     @BasketId UNIQUEIDENTIFIER,
-    @ProductId NVARCHAR(100)
+    @ProductId INT
 AS
 BEGIN
     SET NOCOUNT ON;

@@ -8,7 +8,7 @@ BEGIN
     CREATE TABLE dbo.Items (
         Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
         BasketId UNIQUEIDENTIFIER NOT NULL,
-        ProductId NVARCHAR(100) NOT NULL,
+        ProductId INT NOT NULL IDENTITY(1,1),
         Name NVARCHAR(200) NOT NULL,
         UnitPrice INT NOT NULL,
         Quantity INT NOT NULL,

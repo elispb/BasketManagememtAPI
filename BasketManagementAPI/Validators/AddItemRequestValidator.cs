@@ -7,10 +7,6 @@ public sealed class AddItemRequestValidator : AbstractValidator<AddItemRequest>
 {
     public AddItemRequestValidator()
     {
-        RuleFor(item => item.ProductId)
-            .NotEmpty()
-            .WithMessage("Product ID is required.");
-
         RuleFor(item => item.Name)
             .NotEmpty()
             .WithMessage("Product name is required.");
@@ -25,7 +21,7 @@ public sealed class AddItemRequestValidator : AbstractValidator<AddItemRequest>
 
         When(item => item.ItemDiscount is not null, () =>
         {
-            RuleFor(item => item.ItemDiscount)
+            RuleFor(item => item.ItemDiscount!)
                 .SetValidator(new ItemDiscountRequestValidator());
         });
     }

@@ -59,7 +59,7 @@ public sealed class BasketsControllerIntegrationTests : IAsyncLifetime
         var basket = await getResponse.Content.ReadFromJsonAsync<BasketResponse>(JsonOptions);
         basket.Should().NotBeNull();
         basket!.Items.Should().ContainSingle(item =>
-            item.ProductId == "SKU-BASKET-001"
+            item.ProductId > 0
             && item.Name == "Integration sample item"
             && item.Quantity == 2
             && item.UnitPrice == 200);
@@ -148,11 +148,15 @@ public sealed class BasketsControllerIntegrationTests : IAsyncLifetime
     {
         var addItemsRequest = new AddItemsRequest(new[]
         {
-            new AddItemRequest("SKU-BASKET-001", "Integration sample item", 200, 2, null)
+            new AddItemRequest("Integration sample item", 200, 2, null)
         });
 
         var response = await client.PostAsJsonAsync($"/api/baskets/{basketId}/items", addItemsRequest);
-        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var createdItems = await response.Content.ReadFromJsonAsync<ItemResponse[]>(JsonOptions);
+        createdItems.Should().NotBeNull();
+        createdItems!.Single().ProductId.Should().BeGreaterThan(0);
     }
 }
 

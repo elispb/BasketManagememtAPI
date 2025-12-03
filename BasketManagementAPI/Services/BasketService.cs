@@ -31,7 +31,7 @@ public sealed class BasketService : IBasketService
         return basket;
     }
 
-    public async Task<Basket> AddItemsAsync(Guid basketId, IEnumerable<ItemDefinition> items)
+    public async Task<IReadOnlyCollection<Item>> AddItemsAsync(Guid basketId, IEnumerable<ItemDefinition> items)
     {
         if (items is null)
         {
@@ -39,6 +39,7 @@ public sealed class BasketService : IBasketService
         }
 
         var basket = await _repository.GetAsync(basketId);
+        var processedItems = new List<Item>();
 
         foreach (var itemDefinition in items)
         {
@@ -46,21 +47,24 @@ public sealed class BasketService : IBasketService
                 ? null
                 : ItemDiscountFactory.Create(itemDefinition.ItemDiscount.Type, itemDefinition.ItemDiscount.Amount);
 
-            var item = new Item(
-                itemDefinition.ProductId,
+            var item = Item.Create(
                 itemDefinition.Name,
                 itemDefinition.UnitPrice,
                 itemDefinition.Quantity,
                 discount);
 
-            basket.AddOrUpdateItem(item);
+            var tracked = basket.AddOrUpdateItem(item);
+            if (!processedItems.Contains(tracked))
+            {
+                processedItems.Add(tracked);
+            }
         }
 
         await _repository.SaveAsync(basket);
-        return basket;
+        return processedItems;
     }
 
-    public async Task RemoveItemAsync(Guid basketId, string productId)
+    public async Task RemoveItemAsync(Guid basketId, int productId)
     {
         var deleted = await _repository.DeleteItemAsync(basketId, productId);
         if (!deleted)
@@ -94,7 +98,7 @@ public sealed class BasketService : IBasketService
         return await _totalsCalculator.CalculateAsync(basket);
     }
 
-    public async Task<Item> ApplyItemDiscountAsync(Guid basketId, string productId, ItemDiscountDefinition discount)
+    public async Task<Item> ApplyItemDiscountAsync(Guid basketId, int productId, ItemDiscountDefinition discount)
     {
         var discountEngine = ItemDiscountFactory.Create(discount.Type, discount.Amount);
 
@@ -121,12 +125,12 @@ public sealed class BasketService : IBasketService
         return new BasketSnapshot(basket, totals);
     }
 
-    public Task<Item?> GetItemAsync(Guid basketId, string productId)
+    public Task<Item?> GetItemAsync(Guid basketId, int productId)
     {
         return _repository.GetItemAsync(basketId, productId);
     }
 
-    public async Task<ItemPriceTotals?> GetItemTotalsAsync(Guid basketId, string productId)
+    public async Task<ItemPriceTotals?> GetItemTotalsAsync(Guid basketId, int productId)
     {
         var item = await GetItemAsync(basketId, productId);
         if (item is null)

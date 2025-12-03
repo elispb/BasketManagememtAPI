@@ -27,22 +27,23 @@ public sealed class Basket
         Items = new List<Item>();
     }
 
-    public void AddOrUpdateItem(Item item)
+    public Item AddOrUpdateItem(Item item)
     {
         var existing = Items.FirstOrDefault(i => i.Matches(item));
 
         if (existing is null)
         {
             Items.Add(item);
-            return;
+            return item;
         }
 
         existing.IncreaseQuantity(item.Quantity);
+        return existing;
     }
 
-    public bool RemoveItem(string productId)
+    public bool RemoveItem(int productId)
     {
-        var item = Items.FirstOrDefault(i => string.Equals(i.ProductId, productId, StringComparison.OrdinalIgnoreCase));
+        var item = Items.FirstOrDefault(i => i.ProductId == productId);
 
         if (item is null)
         {

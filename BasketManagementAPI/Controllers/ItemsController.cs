@@ -32,7 +32,7 @@ public sealed class ItemsController : ControllerBase
     /// </summary>
     /// <param name="basketId">Identifier of the basket to modify.</param>
     /// <param name="request">Details of the items to add.</param>
-    /// <returns><see cref="NoContentResult"/> when the request succeeds.</returns>
+    /// <returns><see cref="OkObjectResult"/> containing the created items when the request succeeds.</returns>
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -43,8 +43,9 @@ public sealed class ItemsController : ControllerBase
             return BadRequest("At least one item must be supplied.");
         }
 
-        await _basketService.AddItemsAsync(basketId, request.Items.Select(Map));
-        return NoContent();
+        var addedItems = await _basketService.AddItemsAsync(basketId, request.Items.Select(Map));
+        var response = addedItems.Select(Map).ToList();
+        return Ok(response);
     }
 
     /// <summary>
@@ -53,10 +54,10 @@ public sealed class ItemsController : ControllerBase
     /// <param name="basketId">Identifier of the basket.</param>
     /// <param name="productId">Identifier of the product to return.</param>
     /// <returns>The wrapped item if it exists; otherwise <see cref="NotFoundResult"/>.</returns>
-    [HttpGet("{productId}")]
+    [HttpGet("{productId:int}")]
     [ProducesResponseType(typeof(ItemResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetItem(Guid basketId, string productId)
+    public async Task<IActionResult> GetItem(Guid basketId, int productId)
     {
         var item = await _basketService.GetItemAsync(basketId, productId);
         if (item is null)
@@ -73,10 +74,10 @@ public sealed class ItemsController : ControllerBase
     /// <param name="basketId">Identifier of the basket.</param>
     /// <param name="productId">Identifier of the product to price.</param>
     /// <returns><see cref="ItemPriceResponse"/> if the item exists; otherwise <see cref="NotFoundResult"/>.</returns>
-    [HttpGet("{productId}/price")]
+    [HttpGet("{productId:int}/price")]
     [ProducesResponseType(typeof(ItemPriceResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetItemPrice(Guid basketId, string productId)
+    public async Task<IActionResult> GetItemPrice(Guid basketId, int productId)
     {
         var price = await _basketService.GetItemTotalsAsync(basketId, productId);
         if (price is null)
@@ -94,9 +95,9 @@ public sealed class ItemsController : ControllerBase
     /// <param name="productId">Identifier of the item to discount.</param>
     /// <param name="request">Discount definition payload.</param>
     /// <returns>The updated item wrapped inside an <see cref="ItemResponse"/>.</returns>
-    [HttpPatch("{productId}/discount")]
+    [HttpPatch("{productId:int}/discount")]
     [ProducesResponseType(typeof(ItemResponse), StatusCodes.Status200OK)]
-    public async Task<IActionResult> ApplyItemDiscount(Guid basketId, string productId, ItemDiscountRequest request)
+    public async Task<IActionResult> ApplyItemDiscount(Guid basketId, int productId, ItemDiscountRequest request)
     {
         var item = await _basketService.ApplyItemDiscountAsync(
             basketId,
@@ -112,9 +113,9 @@ public sealed class ItemsController : ControllerBase
     /// <param name="basketId">Identifier of the basket.</param>
     /// <param name="productId">Identifier of the product to remove.</param>
     /// <returns><see cref="NoContentResult"/> once the item is deleted.</returns>
-    [HttpDelete("{productId}")]
+    [HttpDelete("{productId:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> RemoveItem(Guid basketId, string productId)
+    public async Task<IActionResult> RemoveItem(Guid basketId, int productId)
     {
         await _basketService.RemoveItemAsync(basketId, productId);
         return NoContent();
@@ -123,7 +124,6 @@ public sealed class ItemsController : ControllerBase
     private static ItemDefinition Map(AddItemRequest request)
     {
         return new ItemDefinition(
-            request.ProductId,
             request.Name,
             request.UnitPrice,
             request.Quantity,
