@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using BasketManagementAPI.Domain.Baskets;
 using BasketManagementAPI.Domain.Discounts;
 using BasketManagementAPI.Repositories;
@@ -119,6 +120,19 @@ public sealed class BasketService : IBasketService
         var basket = await _repository.GetAsync(basketId);
         var totals = await _totalsCalculator.CalculateAsync(basket);
         return new BasketSnapshot(basket, totals);
+    }
+
+    public async Task<IReadOnlyCollection<BasketSnapshot>> GetAllBasketsAsync()
+    {
+        var baskets = await _repository.GetAllAsync();
+        var snapshots = new List<BasketSnapshot>(baskets.Count);
+        foreach (var basket in baskets)
+        {
+            var totals = await _totalsCalculator.CalculateAsync(basket);
+            snapshots.Add(new BasketSnapshot(basket, totals));
+        }
+
+        return snapshots;
     }
 
     public Task<Item?> GetItemAsync(Guid basketId, int productId)

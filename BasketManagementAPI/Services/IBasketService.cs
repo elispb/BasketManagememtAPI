@@ -19,6 +19,8 @@ public interface IBasketService
 
     Task<BasketSnapshot> GetBasketAsync(Guid basketId);
 
+    Task<IReadOnlyCollection<BasketSnapshot>> GetAllBasketsAsync();
+
     Task<Item> ApplyItemDiscountAsync(Guid basketId, int productId, ItemDiscountDefinition discount);
 
     Task<Item?> GetItemAsync(Guid basketId, int productId);

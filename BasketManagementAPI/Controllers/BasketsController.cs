@@ -88,6 +88,19 @@ public sealed class BasketsController : ControllerBase
         return Ok(Map(snapshot));
     }
 
+    /// <summary>
+    /// Retrieves all current baskets.
+    /// </summary>
+    /// <returns>A list of basket snapshots.</returns>
+    [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<BasketResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAllBaskets()
+    {
+        var snapshots = await _basketService.GetAllBasketsAsync();
+        var response = snapshots.Select(Map).ToList();
+        return Ok(response);
+    }
+
     private static BasketResponse Map(BasketSnapshot basketSnapshot)
     {
         return new BasketResponse(

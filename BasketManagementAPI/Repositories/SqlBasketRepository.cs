@@ -29,6 +29,33 @@ public sealed class SqlBasketRepository : IBasketRepository
         return basket;
     }
 
+    public async Task<IReadOnlyCollection<Basket>> GetAllAsync()
+    {
+        await using var connection = await CreateOpenConnectionAsync();
+
+        var basketIds = new List<Guid>();
+        await using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT [Id] FROM [dbo].[Baskets];";
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                basketIds.Add(reader.GetGuid(0));
+            }
+        }
+
+        var baskets = new List<Basket>(basketIds.Count);
+        foreach (var basketId in basketIds)
+        {
+            var basket = await LoadBasketAsync(connection, basketId);
+            await LoadItemsAsync(connection, basket);
+            await LoadShippingAsync(connection, basket);
+            baskets.Add(basket);
+        }
+
+        return baskets;
+    }
+
     public async Task CreateAsync(Basket basket)
     {
         await using var connection = await CreateOpenConnectionAsync();

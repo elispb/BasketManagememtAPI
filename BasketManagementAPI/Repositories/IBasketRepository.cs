@@ -1,9 +1,12 @@
+using System.Collections.Generic;
 using BasketManagementAPI.Domain.Baskets;
 
 namespace BasketManagementAPI.Repositories;
 
 public interface IBasketRepository
 {
+    Task<IReadOnlyCollection<Basket>> GetAllAsync();
+
     Task<Basket> GetAsync(Guid id);
 
     Task CreateAsync(Basket basket);

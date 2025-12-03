@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -134,6 +135,25 @@ public sealed class BasketsControllerIntegrationTests : IAsyncLifetime
         validation.Should().NotBeNull();
         validation!.Errors["Code"].Should().Contain("Discount code is required.");
         validation.Errors["Percentage"].Should().Contain("Percentage must be greater than zero.");
+    }
+
+    [Fact]
+    public async Task GetBaskets_ReturnsAllExistingBaskets()
+    {
+        var client = _factory.CreateClient();
+        var firstBasketId = await CreateBasketAsync(client);
+        await AddSampleItemAsync(client, firstBasketId);
+        var secondBasketId = await CreateBasketAsync(client);
+
+        var response = await client.GetAsync("/api/baskets");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var baskets = await response.Content.ReadFromJsonAsync<BasketResponse[]>(JsonOptions);
+        baskets.Should().NotBeNull();
+
+        baskets!.Select(basket => basket.Id).Should().Contain(new[] { firstBasketId, secondBasketId });
+        var persisted = baskets.Single(basket => basket.Id == firstBasketId);
+        persisted.Items.Should().ContainSingle(item => item.Name == "Integration sample item");
     }
 
     private static async Task<Guid> CreateBasketAsync(HttpClient client)
