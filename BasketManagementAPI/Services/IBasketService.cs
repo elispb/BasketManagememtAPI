@@ -20,6 +20,10 @@ public interface IBasketService
     Task<BasketSnapshot> GetBasketAsync(Guid basketId);
 
     Task<Item> ApplyItemDiscountAsync(Guid basketId, string productId, ItemDiscountDefinition discount);
+
+    Task<Item?> GetItemAsync(Guid basketId, string productId);
+
+    Task<ItemPriceTotals?> GetItemTotalsAsync(Guid basketId, string productId);
 }
 
 

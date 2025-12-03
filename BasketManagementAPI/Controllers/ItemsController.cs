@@ -34,10 +34,7 @@ public sealed class ItemsController : ControllerBase
     [HttpGet("{productId}")]
     public async Task<IActionResult> GetItem(Guid basketId, string productId)
     {
-        var snapshot = await _basketService.GetBasketAsync(basketId);
-        var item = snapshot.Basket.Items
-            .FirstOrDefault(i => string.Equals(i.ProductId, productId, StringComparison.OrdinalIgnoreCase));
-
+        var item = await _basketService.GetItemAsync(basketId, productId);
         if (item is null)
         {
             return NotFound();
@@ -49,16 +46,13 @@ public sealed class ItemsController : ControllerBase
     [HttpGet("{productId}/price")]
     public async Task<IActionResult> GetItemPrice(Guid basketId, string productId)
     {
-        var snapshot = await _basketService.GetBasketAsync(basketId);
-        var item = snapshot.Basket.Items
-            .FirstOrDefault(i => string.Equals(i.ProductId, productId, StringComparison.OrdinalIgnoreCase));
-
-        if (item is null)
+        var price = await _basketService.GetItemTotalsAsync(basketId, productId);
+        if (price is null)
         {
             return NotFound();
         }
 
-        return Ok(MapPrice(item));
+        return Ok(new ItemPriceResponse(price.LineTotal, price.VatAmount, price.TotalWithVat));
     }
 
     [HttpPatch("{productId}/discount")]
@@ -103,12 +97,6 @@ public sealed class ItemsController : ControllerBase
             item.ItemDiscount?.Description);
     }
 
-    private static ItemPriceResponse MapPrice(Item item)
-    {
-        var lineTotal = item.Total();
-        var vatAmount = (int)Math.Round(lineTotal * 0.20m, 0, MidpointRounding.AwayFromZero);
-        return new ItemPriceResponse(lineTotal, vatAmount, lineTotal + vatAmount);
-    }
 }
 
 

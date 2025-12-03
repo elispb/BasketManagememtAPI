@@ -3,7 +3,6 @@ using BasketManagementAPI.Domain.Discounts;
 using BasketManagementAPI.Domain.Shipping;
 using BasketManagementAPI.Repositories;
 using BasketManagementAPI.Services;
-using BasketManagementAPI.Shipping;
 using FluentAssertions;
 using Moq;
 
@@ -11,30 +10,22 @@ namespace BasketManagementAPI.Tests.BasketTotals;
 
 public class BasketTotalsTests
 {
-    private readonly Mock<IBasketRepository> _repositoryMock;
-    private readonly Mock<IShippingPolicy> _shippingPolicyMock;
     private readonly Mock<IDiscountDefinitionRepository> _discountDefinitionRepositoryMock;
+    private readonly ITotalsCalculator _totalsCalculator;
 
     public BasketTotalsTests()
     {
-        _repositoryMock = new Mock<IBasketRepository>();
-        _repositoryMock.Setup(r => r.CreateAsync(It.IsAny<Basket>())).Returns(Task.CompletedTask);
-        _repositoryMock.Setup(r => r.SaveAsync(It.IsAny<Basket>())).Returns(Task.CompletedTask);
-
-        _shippingPolicyMock = new Mock<IShippingPolicy>();
         _discountDefinitionRepositoryMock = new Mock<IDiscountDefinitionRepository>();
         _discountDefinitionRepositoryMock
             .Setup(r => r.GetByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync((DiscountDefinition?)null);
-        _discountDefinitionRepositoryMock
-            .Setup(r => r.UpsertAsync(It.IsAny<string>(), It.IsAny<decimal>()))
-            .ReturnsAsync(Guid.NewGuid());
-        _shippingPolicyMock.Setup(p => p.ResolveAsync(It.IsAny<string>()))
-            .ReturnsAsync(new ShippingDetails("UK", 0));
+
+        var discountDefinitionService = new DiscountDefinitionService(_discountDefinitionRepositoryMock.Object);
+        _totalsCalculator = new TotalsCalculator(discountDefinitionService);
     }
 
     [Fact]
-    public async Task GetTotalsAsync_IncludesSubtotalDiscountShippingVat()
+    public async Task CalculateAsync_IncludesSubtotalDiscountShippingVat()
     {
         var discountDefinitionId = Guid.NewGuid();
         var basket = new Basket();
@@ -46,24 +37,18 @@ public class BasketTotalsTests
             .Setup(r => r.GetByIdAsync(discountDefinitionId))
             .ReturnsAsync(new DiscountDefinition(discountDefinitionId, "VACAY", 10, null, true));
 
-        var service = CreateServiceWithBasket(basket);
+        var totals = await _totalsCalculator.CalculateAsync(basket);
 
-        var totals = await service.GetTotalsAsync(basket.Id);
-
-        // Total goods including item level discount
         totals.Subtotal.Should().Be(650);
-        // Discount from basket level discount only
         totals.Discount.Should().Be(50);
         totals.Shipping.Should().Be(20);
-        // Total without VAT after all discounts and shipping
         totals.TotalWithoutVat.Should().Be(620);
-        // VAT applies to goods after basket discounts but excludes shipping
         totals.VatAmount.Should().Be(120);
         totals.TotalWithVat.Should().Be(740);
     }
 
     [Fact]
-    public async Task GetTotalsAsync_TotalWithoutVat_FloorsAtZero()
+    public async Task CalculateAsync_TotalWithoutVat_FloorsAtZero()
     {
         var discountDefinitionId = Guid.NewGuid();
         var basket = new Basket();
@@ -74,9 +59,7 @@ public class BasketTotalsTests
             .Setup(r => r.GetByIdAsync(discountDefinitionId))
             .ReturnsAsync(new DiscountDefinition(discountDefinitionId, "FREE", 100, null, true));
 
-        var service = CreateServiceWithBasket(basket);
-
-        var totals = await service.GetTotalsAsync(basket.Id);
+        var totals = await _totalsCalculator.CalculateAsync(basket);
 
         totals.TotalWithoutVat.Should().Be(20);
         totals.VatAmount.Should().Be(0);
@@ -84,7 +67,7 @@ public class BasketTotalsTests
     }
 
     [Fact]
-    public async Task GetTotalsAsync_HandlesVeryLargeAmounts()
+    public async Task CalculateAsync_HandlesVeryLargeAmounts()
     {
         var discountDefinitionId = Guid.NewGuid();
         var basket = new Basket();
@@ -95,9 +78,7 @@ public class BasketTotalsTests
             .Setup(r => r.GetByIdAsync(discountDefinitionId))
             .ReturnsAsync(new DiscountDefinition(discountDefinitionId, "BULK", 10, null, true));
 
-        var service = CreateServiceWithBasket(basket);
-
-        var totals = await service.GetTotalsAsync(basket.Id);
+        var totals = await _totalsCalculator.CalculateAsync(basket);
 
         totals.Subtotal.Should().Be(1_800_000_000);
         totals.Discount.Should().Be(180_000_000);
@@ -105,11 +86,4 @@ public class BasketTotalsTests
         totals.VatAmount.Should().Be(324_000_000);
         totals.TotalWithVat.Should().Be(1_944_000_000);
     }
-
-    private BasketService CreateServiceWithBasket(Basket basket)
-    {
-        _repositoryMock.Setup(r => r.GetAsync(It.IsAny<Guid>())).ReturnsAsync(basket);
-        return new BasketService(_repositoryMock.Object, _shippingPolicyMock.Object, _discountDefinitionRepositoryMock.Object);
-    }
-
 }
